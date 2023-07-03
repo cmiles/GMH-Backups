@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.Jobs", "GmhWorkshop.Jobs\GmhWorkshop.Jobs.csproj", "{A4307881-CFCC-4778-9728-C0DC436542C3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.Web", "GmhWorkshop.Web\GmhWorkshop.Web.csproj", "{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.ConsoleRunner", "GmhWorkshop.ConsoleRunner\GmhWorkshop.ConsoleRunner.csproj", "{BA153F69-45D8-46E7-B39B-4B6E8444440D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6179AD14-B2C6-4F7C-9A76-516AB9DBE942}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.CommonTools", "GmhWorkshop.CommonTools\GmhWorkshop.CommonTools.csproj", "{71279F1F-06AF-4D82-B491-E0427582554F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.WeatherFlowTempest", "GmhWorkshop.WeatherFlowTempest\GmhWorkshop.WeatherFlowTempest.csproj", "{F0783416-4FEA-4191-8573-12A55723849D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.SensorPush", "GmhWorkshop.SensorPush\GmhWorkshop.SensorPush.csproj", "{9F04B4D9-BE5D-4BC1-BBE1-B19AF9FA5BAD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A4307881-CFCC-4778-9728-C0DC436542C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4307881-CFCC-4778-9728-C0DC436542C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4307881-CFCC-4778-9728-C0DC436542C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4307881-CFCC-4778-9728-C0DC436542C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71279F1F-06AF-4D82-B491-E0427582554F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71279F1F-06AF-4D82-B491-E0427582554F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71279F1F-06AF-4D82-B491-E0427582554F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71279F1F-06AF-4D82-B491-E0427582554F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0783416-4FEA-4191-8573-12A55723849D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0783416-4FEA-4191-8573-12A55723849D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0783416-4FEA-4191-8573-12A55723849D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0783416-4FEA-4191-8573-12A55723849D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F04B4D9-BE5D-4BC1-BBE1-B19AF9FA5BAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F04B4D9-BE5D-4BC1-BBE1-B19AF9FA5BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F04B4D9-BE5D-4BC1-BBE1-B19AF9FA5BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F04B4D9-BE5D-4BC1-BBE1-B19AF9FA5BAD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {23FD146C-830C-4803-A7EC-FC910E08DDD6}
+	EndGlobalSection
+EndGlobal

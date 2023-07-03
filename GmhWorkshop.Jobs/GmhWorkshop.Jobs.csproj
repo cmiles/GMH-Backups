@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>  <UserSecretsId>ef24cb24-4dd5-414d-8bc6-7eb887a55052</UserSecretsId>
+  </PropertyGroup><ItemGroup>
+  <ProjectReference Include="..\GmhWorkshop.CommonTools\GmhWorkshop.CommonTools.csproj" />
+  <ProjectReference Include="..\GmhWorkshop.SensorPush\GmhWorkshop.SensorPush.csproj" />
+  <ProjectReference Include="..\GmhWorkshop.WeatherFlowTempest\GmhWorkshop.WeatherFlowTempest.csproj" />
+</ItemGroup>
+
+</Project>
