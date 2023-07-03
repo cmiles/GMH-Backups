@@ -118,7 +118,10 @@ namespace GmhWorkshop.Jobs
                 var samples = await client.SamplesAsync(new SamplesRequest
                 {
                     Sensors = loopDays.device.Id.AsList(), Active = true,
-                    Limit = 2000,
+                    //7/3/2023 - It appears that the baseline is one reading per second - the 99999 value is just for 
+                    //safety to try to adjust if once per second changes. Also the API specifies that at a certain
+                    //size (5mb) the request will be truncated.
+                    Limit = 99999,
                     StartTime =
                         loopDays.date.ToDateTime(new TimeOnly()).AddMinutes(-30).ToString("yyyy-MM-ddTHH:MM:ss-0000"),
                     StopTime = loopDays.date.ToDateTime(new TimeOnly()).AddDays(1).AddMinutes(30)
@@ -131,6 +134,30 @@ namespace GmhWorkshop.Jobs
                     Log.Warning(
                         "Failed to write Backup Files for {startDate} - {deviceName} - {deviceId} - No Samples Found",
                         loopDays.date, loopDays.device.Name, loopDays.device.DeviceId);
+                    continue;
+                }
+
+                if (samples.Truncated ?? false)
+                {
+                    //Todo: this may represent some kind of API change and needs a user alert
+                    Log
+                        .ForContext("hint", "SensorPush API calls have a 'truncated' property and with large " +
+                                            "requests (over 5mb according to the documentation) may mark the " +
+                                            "request truncated so that a client could detect this and then " +
+                                            "figure out how to retrieve the needed additional data. However in " +
+                                            "this routine - single sensor, single day - at least with current " +
+                                            "sensors this probably indicates something has gone wrong... Testing " +
+                                            "with the API in July of 2023 indicated one reading per minute which " +
+                                            "should never be truncated...")
+                        .ForContext(nameof(loopDays), loopDays, true)
+                        .ForContext(nameof(samples.Last_time), samples.Last_time)
+                        .ForContext(nameof(samples.Status), samples.Status)
+                        .ForContext(nameof(samples.Total_samples), samples.Total_samples)
+                        .ForContext(nameof(samples.Total_sensors), samples.Total_sensors)
+                        .ForContext(nameof(samples.Truncated), samples.Truncated)
+                        .Error(
+                            "Failed to write Backup Files for {startDate} - {deviceName} - {deviceId} - Found more Samples than the API can transmit in a single call?",
+                            loopDays.date, loopDays.device.Name, loopDays.device.DeviceId);
                     continue;
                 }
 
@@ -168,6 +195,12 @@ namespace GmhWorkshop.Jobs
                                            "attempts at writing this date (this method is best used daily or weekly) and " +
                                            "that file system errors are likely to be transient.")
                         .ForContext("exception", e, true)
+                        .ForContext(nameof(loopDays), loopDays, true)
+                        .ForContext(nameof(samples.Last_time), samples.Last_time)
+                        .ForContext(nameof(samples.Status), samples.Status)
+                        .ForContext(nameof(samples.Total_samples), samples.Total_samples)
+                        .ForContext(nameof(samples.Total_sensors), samples.Total_sensors)
+                        .ForContext(nameof(samples.Truncated), samples.Truncated)
                         .ForContext(nameof(wroteTransformed), wroteTransformed)
                         .ForContext(nameof(dayJsonFile), dayJsonFile.FullName)
                         .ForContext(nameof(wroteApi), wroteApi).ForContext("dayApiJsonFile", dayJsonFile.FullName)
