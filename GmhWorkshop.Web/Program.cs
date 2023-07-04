@@ -1,9 +1,10 @@
-using GmhWorkshop.Jobs;
+using GmhWorkshop.Web;
+using GmhWorkshop.Web.TaskWrappers;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
 using Hangfire.Console.Extensions.Serilog;
-using Hangfire.Server;
+using Hangfire.Dashboard;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
 using Serilog.Events;
@@ -36,7 +37,9 @@ builder.Services.AddHangfire(configuration => configuration
     .UseConsole()
     .UseInMemoryStorage());
 
-builder.Services.AddScoped<BirdPiBackupHangFireWrapper>();
+builder.Services.AddScoped<BirdPiBackupHangfireWrapper>();
+builder.Services.AddScoped<TempestDayFileBackupHangfireWrapper>();
+builder.Services.AddScoped<SensorPushDayFileBackupHangfireWrapper>();
 
 // Add the processing server as IHostedService
 builder.Services.AddHangfireServer();
@@ -52,14 +55,17 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHangfireDashboard();
+app.MapHangfireDashboard(new DashboardOptions { Authorization = new[] { new HangfireAllowAllAuthorizationFilter() } });
 app.MapDefaultControllerRoute();
 app.MapControllerRoute(
     "default",
     "{controller=Home}/{action=Index}/{id?}");
 
 
-BackgroundJob.Enqueue<BirdPiBackupHangFireWrapper>(x => x.Run(null));
+RecurringJob.AddOrUpdate<BirdPiBackupHangfireWrapper>("BirdPiBackup", x => x.Run(null), "0 1 * * 0");
+RecurringJob.AddOrUpdate<TempestDayFileBackupHangfireWrapper>("TempestDayFileBackup", x => x.Run(null), "0 2 * * *");
+RecurringJob.AddOrUpdate<SensorPushDayFileBackupHangfireWrapper>("SensorPushDayFileBackup", x => x.Run(null),
+    "0 2 * * *");
 
 try
 {
@@ -74,17 +80,14 @@ finally
     Log.CloseAndFlush();
 }
 
-public class BirdPiBackupHangFireWrapper
+public class HangfireAllowAllAuthorizationFilter : IDashboardAuthorizationFilter
 {
-    private readonly WorkshopSettings _settings;
-
-    public BirdPiBackupHangFireWrapper(IConfiguration configuration)
+    public bool Authorize(DashboardContext context)
     {
-        _settings = configuration.GetSection("WorkshopSettings").Get<WorkshopSettings>();
-    }
+        var httpContext = context.GetHttpContext();
 
-    public async Task Run(PerformContext context)
-    {
-        await BirdPiBackup.Run(_settings, new Progress<string>(context.WriteLine));
+        // Allow all users to see the Dashboard - Dangerous and assumes any/all access
+        // control is from external network setup!?!
+        return true;
     }
 }
