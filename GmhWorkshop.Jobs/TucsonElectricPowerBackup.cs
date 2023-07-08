@@ -10,6 +10,10 @@ using Serilog;
 
 namespace GmhWorkshop.Jobs;
 
+/// <summary>
+/// A Playwright based Backup for TEP Data - handles multiple accounts but doesn't currently
+/// process multiple meters per account.
+/// </summary>
 public static class TucsonElectricPowerBackup
 {
     public static async Task Run(WorkshopSettings settings, IProgress<string> progress)
@@ -40,10 +44,12 @@ public static class TucsonElectricPowerBackup
             backupDirectory.Create();
         }
 
+        progress.Report("Starting Playwright and Logging into TEP");
+
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
-            Headless = false
+            Headless = true
         });
         var context = await browser.NewContextAsync();
 
@@ -91,6 +97,8 @@ public static class TucsonElectricPowerBackup
 
             var accountNumber = await accounts[i].TextContentAsync();
 
+            Log.Verbose("Starting Processing for TEP Account {accountNumber}", accountNumber);
+
             await accounts[i].ClickAsync();
 
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -111,13 +119,15 @@ public static class TucsonElectricPowerBackup
                         new PageGetByRoleOptions { Name = "Downloads usage data Download" })
                     .ClickAsync();
             });
-
+            
             var csvTempFile =
                 new FileInfo(Path.Combine(backupDirectory.FullName,
                     @$"TempDownload-TEP-Account-{accountNumber}-CSV-{frozenNow:yyyy-MM-dd-HH-mm-ss}.csv"));
 
             await csvDownload.SaveAsAsync(csvTempFile.FullName);
             await csvDownload.DeleteAsync();
+
+            progress.Report($"Saved {csvTempFile}");
 
             var configuration = new CsvConfiguration(CultureInfo.InvariantCulture);
             var csvRows = new List<TepCsvRow>();
@@ -132,8 +142,13 @@ public static class TucsonElectricPowerBackup
                 csvRows.AddRange(csv.GetRecords<TepCsvRow>());
             }
 
+            progress.Report($"Found {csvRows.Count} CSV Entries in {csvTempFile.FullName}");
+
             var startDate = csvRows.MinBy(x => x.Date)!.Date;
-            var lastDate = csvRows.MaxBy(x => x.Date)!.Date;
+
+            //The last entry for a day will list 12am as the end time - meaning 0 on the following day.
+            var lastDateEntry = csvRows.OrderBy(x => x.Date).ThenBy(x => x.StartTime).Last()!;
+            var lastDate = lastDateEntry.EndTime == TimeOnly.MinValue ? lastDateEntry.Date.AddDays(1) : lastDateEntry.Date;
 
             var csvDatedFile =
                 new FileInfo(Path.Combine(backupDirectory.FullName,
@@ -142,10 +157,12 @@ public static class TucsonElectricPowerBackup
             if (!csvDatedFile.Exists)
             {
                 csvTempFile.MoveTo(csvDatedFile.FullName);
+                Log.Verbose("Saved TEP CSV Data to {fileName}", csvDatedFile.FullName);
             }
             else
             {
                 csvTempFile.Delete();
+                progress.Report($"No new data found for TEP {accountNumber}'s CSV Data Download.");
             }
 
             await Task.Delay(3000);
@@ -165,6 +182,8 @@ public static class TucsonElectricPowerBackup
 
             await xmlZipTempDownload.SaveAsAsync(xmlTempZipFile.FullName);
             await xmlZipTempDownload.DeleteAsync();
+
+            progress.Report("Processing TEP XML Zip File");
 
             using (var xmlZipArchive = new ZipArchive(new FileStream(xmlTempZipFile.FullName, FileMode.Open)))
             {
@@ -187,6 +206,8 @@ public static class TucsonElectricPowerBackup
                         .content
                         .IntervalBlock.SelectMany(y => y.IntervalReading).ToList();
 
+                    progress.Report($"Found {observationInterval.Count} XML Intervals");
+
                     var startIntervalEntry = observationInterval.MinBy(x => x.timePeriod.start);
                     var endIntervalEntry = observationInterval.MaxBy(x => x.timePeriod.start);
 
@@ -201,10 +222,12 @@ public static class TucsonElectricPowerBackup
                     if (!finalFile.Exists)
                     {
                         temporaryXmlFile.MoveTo(finalFile.FullName);
+                        Log.Verbose("Saved TEP XML Data to {fileName}", finalFile.FullName);
                     }
                     else
                     {
                         temporaryXmlFile.Delete();
+                        progress.Report($"No new data found for TEP {accountNumber}'s XML Data Download.");
                     }
                 }
             }
@@ -218,6 +241,8 @@ public static class TucsonElectricPowerBackup
             await Task.Delay(5000);
         }
 
-        //TODO: Logout
+        await page.GetByRole(AriaRole.Button, new() { Name = "Log Out" }).ClickAsync();
+
+        Log.Information("Finished {jobName}", "TucsonElectricPowerBackup");
     }
 }
