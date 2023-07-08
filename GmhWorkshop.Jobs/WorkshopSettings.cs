@@ -15,4 +15,7 @@ public class WorkshopSettings
     public int TempestDeviceId { get; set; }
     public string TempestFileBackupDirectory { get; set; }
     public int TempestMonthsBack { get; set; }
+    public string TepEmail { get; set; }
+    public string TepPassword { get; set; }
+    public string TepBackupDirectory { get; set; }
 }
