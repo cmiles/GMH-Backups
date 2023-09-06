@@ -18,4 +18,7 @@ public class WorkshopSettings
     public string TepEmail { get; set; }
     public string TepPassword { get; set; }
     public string TepBackupDirectory { get; set; }
+    public string EcobeeEmail { get; set; }
+    public string EcobeePassword { get; set; }
+    public string EcobeeBackupDirectory { get; set; }
 }

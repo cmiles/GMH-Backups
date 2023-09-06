@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.WeatherFlowTemp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.SensorPush", "GmhWorkshop.SensorPush\GmhWorkshop.SensorPush.csproj", "{9F04B4D9-BE5D-4BC1-BBE1-B19AF9FA5BAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.TucsonElectricPower", "GmhWorkshop.TucsonElectricPower\GmhWorkshop.TucsonElectricPower.csproj", "{8917E038-2D4B-49A1-883E-D52DDD850867}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.TucsonElectricPower", "GmhWorkshop.TucsonElectricPower\GmhWorkshop.TucsonElectricPower.csproj", "{8917E038-2D4B-49A1-883E-D52DDD850867}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

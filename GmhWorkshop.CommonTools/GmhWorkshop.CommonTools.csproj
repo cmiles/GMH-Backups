@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Serilog" Version="3.0.1" />
-    <PackageReference Include="Serilog.Enrichers.CallerInfo" Version="1.0.1" />
+    <PackageReference Include="Serilog.Enrichers.CallerInfo" Version="1.0.3" />
     <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00910" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />

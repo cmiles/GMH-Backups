@@ -5,6 +5,7 @@ using Hangfire.Console;
 using Hangfire.Console.Extensions;
 using Hangfire.Console.Extensions.Serilog;
 using Hangfire.Dashboard;
+using Hangfire.Storage.SQLite;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
 using Serilog.Events;
@@ -26,8 +27,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddHangfire(configuration => configuration
@@ -35,7 +34,7 @@ builder.Services.AddHangfire(configuration => configuration
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UseConsole()
-    .UseInMemoryStorage());
+    .UseSQLiteStorage());
 
 builder.Services.AddScoped<BirdPiBackupHangfireWrapper>();
 builder.Services.AddScoped<TempestDayFileBackupHangfireWrapper>();
@@ -50,7 +49,6 @@ builder.Services.AddMvc();
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
