@@ -18,6 +18,15 @@ public static class TucsonElectricPowerBackup
 {
     public static async Task Run(WorkshopSettings settings, IProgress<string> progress)
     {
+        var exitCode = Program.Main(new[] { "install" });
+
+        if (exitCode != 0)
+            Log.ForContext("hint",
+                    "Playwright requires binaries for the browsers - the Ats Buying Notes calls the Playwright install routine each time it runs both to make sure they are installed and also to keep on latest. This failure means there was an install problem that may need to be investigated - the program will continue to try to run since the needed binaries may already be present and the error could be transient. See the Playwright install docs for details including a Powershell script you can run to do the install (included with this program).")
+                .Warning(
+                    "TucsonElectricPowerBackup - Trouble Running the Playwright Browser Install - Exit Code {exitCode} Continuing",
+                    exitCode);
+
         Log.Information("Starting {jobName}", "TucsonElectricPowerBackup");
 
         if (string.IsNullOrWhiteSpace(settings.TepEmail))
