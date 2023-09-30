@@ -24,6 +24,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.SensorPush", "G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.TucsonElectricPower", "GmhWorkshop.TucsonElectricPower\GmhWorkshop.TucsonElectricPower.csproj", "{8917E038-2D4B-49A1-883E-D52DDD850867}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.Ecobee", "GmhWorkshop.Ecobee\GmhWorkshop.Ecobee.csproj", "{4372DA7E-E977-498B-BF2D-06175E97230C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.VictronRemoteMonitoring", "GmhWorkshop.VictronRemoteMonitoring\GmhWorkshop.VictronRemoteMonitoring.csproj", "{E725B33A-730A-4865-8BF7-917A9C718E28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +62,14 @@ Global
 		{8917E038-2D4B-49A1-883E-D52DDD850867}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8917E038-2D4B-49A1-883E-D52DDD850867}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8917E038-2D4B-49A1-883E-D52DDD850867}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4372DA7E-E977-498B-BF2D-06175E97230C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4372DA7E-E977-498B-BF2D-06175E97230C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4372DA7E-E977-498B-BF2D-06175E97230C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4372DA7E-E977-498B-BF2D-06175E97230C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E725B33A-730A-4865-8BF7-917A9C718E28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E725B33A-730A-4865-8BF7-917A9C718E28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E725B33A-730A-4865-8BF7-917A9C718E28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E725B33A-730A-4865-8BF7-917A9C718E28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

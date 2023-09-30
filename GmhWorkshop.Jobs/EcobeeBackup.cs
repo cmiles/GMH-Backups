@@ -9,7 +9,7 @@ using CsvHelper.Configuration.Attributes;
 
 namespace GmhWorkshop.Jobs;
 
-internal class EcobeeBackup
+public class EcobeeBackup
 {
     public static async Task Run(WorkshopSettings settings, IProgress<string> progress)
     {
@@ -18,7 +18,7 @@ internal class EcobeeBackup
         if (exitCode != 0)
         {
             Log.ForContext("hint",
-                    "Playwright requires binaries for the browsers - the Ats Buying Notes calls the Playwright install routine each time it runs both to make sure they are installed and also to keep on latest. This failure means there was an install problem that may need to be investigated - the program will continue to try to run since the needed binaries may already be present and the error could be transient. See the Playwright install docs for details including a Powershell script you can run to do the install (included with this program).")
+                    "Playwright requires binaries for the browsers - the Ats Buying Notes calls the Playwright install routine each time it runs both to make sure they are installed and also to keep on latest. This failure means there was an install problem that may need to be investigated - the program will continue to try to run since the needed binaries may already be present and the error could be transient. See the Playwright install docs for details including a PowerShell script you can run to do the install (included with this program).")
                 .Warning(
                     "EcobeeBackup - Trouble Running the Playwright Browser Install - Exit Code {exitCode} Continuing",
                     exitCode);
@@ -57,9 +57,9 @@ internal class EcobeeBackup
 
         await page.GotoAsync("https://www.ecobee.com/en-us/");
 
-        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Task.Delay(5000);
 
-        await Task.Delay(1000);
+        await page.HoverAsync("text=Sign In");
 
         await page.GetByRole(AriaRole.Link, new() { Name = "Sign in to your account" }).ClickAsync();
 
@@ -67,24 +67,30 @@ internal class EcobeeBackup
 
         await page.GetByLabel("Password").FillAsync(settings.EcobeePassword);
 
-        await page.GotoAsync(
-            "https://www.ecobee.com/consumerportal/index.html#/devices/thermostats/521739387948/homeiq/diagnostics/downloadData");
+        await (await page.GetByText("Sign in").AllAsync()).Last().ClickAsync();
+
+        await Task.Delay(5000);
 
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Task.Delay(1000);
+        await page.GotoAsync(
+            "https://www.ecobee.com/consumerportal/index.html#/devices/thermostats/521739387948/homeiq/diagnostics/downloadData");
 
         var csvDownload = await page.RunAndWaitForDownloadAsync(async () =>
         {
-            await page.GetByRole(AriaRole.Button, new() { Name = "Download Last 7 Day's Data" }).ClickAsync();
+            await page.GetByText("Download Last 7 Day's Data").ClickAsync();
+            //await page.GetByRole(AriaRole.Button, new() { Name = "Download Last 7 Day's Data" }).ClickAsync();
         });
 
         var backupDirectory = new DirectoryInfo(settings.EcobeeBackupDirectory);
 
         if (!backupDirectory.Exists) backupDirectory.Create();
 
+
         var tempCsvFiles = new FileInfo(Path.Combine(backupDirectory.FullName,
             $"Temp-Ecobee-Csv-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.csv"));
+
+        await csvDownload.SaveAsAsync(tempCsvFiles.FullName);
 
         var lines = await File.ReadAllLinesAsync(tempCsvFiles.FullName);
 
@@ -93,7 +99,7 @@ internal class EcobeeBackup
         var ecobeeId = lines[0].Replace("#,Thermostat,identifier,", "");
         var header = lines[5];
 
-        foreach (var loopLine in lines.Skip(5))
+        foreach (var loopLine in lines.Skip(6))
         {
             var fields = loopLine.Split(',');
 

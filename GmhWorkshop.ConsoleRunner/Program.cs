@@ -21,9 +21,11 @@ var workshopConfig =
 
 Console.WriteLine(workshopConfig.BirdPiHost);
 
-await BirdPiBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
+await EcobeeBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
+await TucsonElectricPowerBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
 await TempestWeatherDayFileBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
 await SensorPushDayFileBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
-await TucsonElectricPowerBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
+//await BirdPiBackup.Run(workshopConfig, new Progress<string>(Console.WriteLine));
+
 
 Log.CloseAndFlush();
