@@ -52,25 +52,25 @@ public static class BirdPiBackup
         var birdDbLocalBackupFile = Path.Combine(backupDirectory.FullName, "birds.db");
         var birdDbRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/scripts/birds.db");
         Log.Verbose("Writing {remotePath} to {localPath}", birdDbRemotePath, birdDbLocalBackupFile);
-        await Sftp.DownloadFile(sftpClient, birdDbRemotePath,
+        await SftpTools.DownloadFile(sftpClient, birdDbRemotePath,
             birdDbLocalBackupFile);
 
         var birdnetConfLocalBackupFile = Path.Combine(backupDirectory.FullName, "birdnet.conf");
         var birdnetConfRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/birdnet.conf");
         Log.Verbose("Writing {remotePath} to {localPath}", birdnetConfRemotePath, birdnetConfLocalBackupFile);
-        await Sftp.DownloadFile(sftpClient, birdnetConfRemotePath,
+        await SftpTools.DownloadFile(sftpClient, birdnetConfRemotePath,
             birdnetConfLocalBackupFile);
 
         var appriseTxtLocalBackupFile = Path.Combine(backupDirectory.FullName, "apprise.txt");
         var appriseTxtRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/apprise.txt");
         Log.Verbose("Writing {remotePath} to {localPath}", appriseTxtRemotePath, appriseTxtLocalBackupFile);
-        await Sftp.DownloadFile(sftpClient, appriseTxtRemotePath,
+        await SftpTools.DownloadFile(sftpClient, appriseTxtRemotePath,
             appriseTxtLocalBackupFile);
 
-        await Sftp.DownloadDirectoriesAndRegularFiles(sftpClient,
+        await SftpTools.DownloadDirectoriesAndRegularFiles(sftpClient,
             Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/By_Date"),
             Path.Combine(backupDirectory.FullName, "Extracted", "By_Date"), progress);
-        await Sftp.DownloadDirectoriesAndRegularFiles(sftpClient,
+        await SftpTools.DownloadDirectoriesAndRegularFiles(sftpClient,
             Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/Charts"),
             Path.Combine(backupDirectory.FullName, "Extracted", "Charts"), progress);
 

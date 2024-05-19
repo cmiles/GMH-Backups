@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace GmhWorkshop.CommonTools;
 
-public static class Sftp
+public static class SftpTools
 {
     public static void DirectoryList(
         SftpClient sftpClient, ISftpFile sourceRemoteDirectory, List<ISftpFile> directoryList, IProgress<string> progress)
