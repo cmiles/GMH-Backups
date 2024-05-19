@@ -1,22 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Flurl;
+﻿using Flurl;
 using Flurl.Http;
+using GmhWorkshop.VictronRemoteMonitoring.Models;
 
 namespace GmhWorkshop.VictronRemoteMonitoring;
+
 public static class VictronVrmTools
 {
     public static readonly string VictronApiUrl = "https://vrmapi.victronenergy.com/v2/";
-    public static async Task<AuthResponse> Login(string username, string password)
+
+    public static async Task<InstallationsResponse> GetInstallations(string token, string userId)
     {
-        var login = VictronApiUrl.AppendPathSegment("auth/login");
+        var installationsResponse = await VictronApiUrl.AppendPathSegment($"users/{userId}/installations")
+            .WithXAuthBearerToken(token).GetAsync();
+        var response = await installationsResponse.GetJsonAsync<InstallationsResponse>();
 
-        var response = await login.WithHeader("Content-Type", "application/json").PostJsonAsync(new { username = "username", password = "password" });
-
-        return await response.GetJsonAsync<AuthResponse>();
+        return response;
     }
 
     public static async Task<UserResponse> GetLoggedInUser(string token)
@@ -27,12 +25,28 @@ public static class VictronVrmTools
         return response;
     }
 
-    public static async Task<InstallationsResponse> GetInstallations(string token, string userId)
+    public static async Task<StatsResponse> GetStats(string token, string installationId)
     {
-        var installationsResponse = await VictronApiUrl.AppendPathSegment($"users/{userId}/installations").WithXAuthBearerToken(token).GetAsync();
-        var response = await installationsResponse.GetJsonAsync<InstallationsResponse>();
+        var statsResponse = await "https://vrmapi.victronenergy.com/v2/"
+            .AppendPathSegment($"installations/{installationId}/stats").SetQueryParams(new
+            {
+                interval = "hours",
+                show_instance = true,
+                type = new[] { "solar_yield" }
+            }).WithXAuthBearerToken(token).GetAsync();
+        var response = await statsResponse.GetJsonAsync<StatsResponse>();
 
         return response;
+    }
+
+    public static async Task<AuthResponse> Login(string username, string password)
+    {
+        var login = VictronApiUrl.AppendPathSegment("auth/login");
+
+        var response = await login.WithHeader("Content-Type", "application/json")
+            .PostJsonAsync(new { username = "username", password = "password" });
+
+        return await response.GetJsonAsync<AuthResponse>();
     }
 
     public static IFlurlRequest WithXAuthBearerToken(this Url url, string token)

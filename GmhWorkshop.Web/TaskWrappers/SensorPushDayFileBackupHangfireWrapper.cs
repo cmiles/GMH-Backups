@@ -25,6 +25,6 @@ public class SensorPushDayFileBackupHangfireWrapper
                 .Error("{wrapperName} received null settings?", nameof(SensorPushDayFileBackupHangfireWrapper));
             return;
         }
-        await SensorPushDayFileBackup.Run(_settings, new Progress<string>(context.WriteLine));
+        await SensorPushBackup.Run(_settings, new Progress<string>(context.WriteLine));
     }
 }

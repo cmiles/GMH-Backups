@@ -26,7 +26,7 @@ public class EcobeeBackup
 
         //2023-7-8: The Ecobee API seemed like a challenge for a fully automated no
         //user action scenario?
-        Log.Information("Starting {jobName}", "EcobeeBackup");
+        Log.Information("Starting {jobName}", nameof(EcobeeBackup));
 
         if (string.IsNullOrWhiteSpace(settings.EcobeeEmail))
         {

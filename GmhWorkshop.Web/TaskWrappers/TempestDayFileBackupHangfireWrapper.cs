@@ -25,6 +25,6 @@ public class TempestDayFileBackupHangfireWrapper
                 .Error("{wrapperName} received null settings?", nameof(SensorPushDayFileBackupHangfireWrapper));
             return;
         }
-        await TempestWeatherDayFileBackup.Run(_settings, new Progress<string>(context.WriteLine));
+        await TempestWeatherBackup.Run(_settings, new Progress<string>(context.WriteLine));
     }
 }

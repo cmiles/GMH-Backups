@@ -5,11 +5,11 @@ using Serilog;
 
 namespace GmhWorkshop.Jobs;
 
-public static class SensorPushDayFileBackup
+public static class SensorPushBackup
 {
     public static async Task Run(WorkshopSettings settings, IProgress<string> progress)
     {
-        Log.Information("Starting {jobName}", "TempestWeatherBackup");
+        Log.Information("Starting {jobName}", nameof(SensorPushBackup));
 
         if (string.IsNullOrWhiteSpace(settings.SensorPushEmail))
         {

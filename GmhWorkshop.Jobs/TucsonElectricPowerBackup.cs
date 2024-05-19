@@ -27,7 +27,7 @@ public static class TucsonElectricPowerBackup
                     "TucsonElectricPowerBackup - Trouble Running the Playwright Browser Install - Exit Code {exitCode} Continuing",
                     exitCode);
 
-        Log.Information("Starting {jobName}", "TucsonElectricPowerBackup");
+        Log.Information("Starting {jobName}", nameof(TucsonElectricPowerBackup));
 
         if (string.IsNullOrWhiteSpace(settings.TepEmail))
         {

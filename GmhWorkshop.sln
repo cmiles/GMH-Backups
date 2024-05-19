@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.Jobs", "GmhWorkshop.Jobs\GmhWorkshop.Jobs.csproj", "{A4307881-CFCC-4778-9728-C0DC436542C3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.Web", "GmhWorkshop.Web\GmhWorkshop.Web.csproj", "{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.ConsoleRunner", "GmhWorkshop.ConsoleRunner\GmhWorkshop.ConsoleRunner.csproj", "{BA153F69-45D8-46E7-B39B-4B6E8444440D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6179AD14-B2C6-4F7C-9A76-516AB9DBE942}"
@@ -24,9 +22,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.SensorPush", "G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.TucsonElectricPower", "GmhWorkshop.TucsonElectricPower\GmhWorkshop.TucsonElectricPower.csproj", "{8917E038-2D4B-49A1-883E-D52DDD850867}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.Ecobee", "GmhWorkshop.Ecobee\GmhWorkshop.Ecobee.csproj", "{4372DA7E-E977-498B-BF2D-06175E97230C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.Ecobee", "GmhWorkshop.Ecobee\GmhWorkshop.Ecobee.csproj", "{4372DA7E-E977-498B-BF2D-06175E97230C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.VictronRemoteMonitoring", "GmhWorkshop.VictronRemoteMonitoring\GmhWorkshop.VictronRemoteMonitoring.csproj", "{E725B33A-730A-4865-8BF7-917A9C718E28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.VictronRemoteMonitoring", "GmhWorkshop.VictronRemoteMonitoring\GmhWorkshop.VictronRemoteMonitoring.csproj", "{E725B33A-730A-4865-8BF7-917A9C718E28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,10 +36,6 @@ Global
 		{A4307881-CFCC-4778-9728-C0DC436542C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4307881-CFCC-4778-9728-C0DC436542C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4307881-CFCC-4778-9728-C0DC436542C3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4C72B03-C7F4-4A1F-B6BD-CAE2BD60CE4C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA153F69-45D8-46E7-B39B-4B6E8444440D}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -1,4 +1,4 @@
-﻿namespace GmhWorkshop.VictronRemoteMonitoring;
+﻿namespace GmhWorkshop.VictronRemoteMonitoring.Models;
 
 public class AuthResponse
 {

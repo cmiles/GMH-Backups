@@ -8,7 +8,7 @@ public static class BirdPiBackup
 {
     public static async Task Run(WorkshopSettings settings, IProgress<string> progress)
     {
-        Log.Information("Starting {jobName}", "BirdPiBackup");
+        Log.Information("Starting {jobName}", nameof(BirdPiBackup));
 
         if (string.IsNullOrWhiteSpace(settings.BirdPiHost))
         {

@@ -8,7 +8,7 @@ namespace GmhWorkshop.CommonTools;
 public static class Sftp
 {
     public static void DirectoryList(
-        SftpClient sftpClient, SftpFile sourceRemoteDirectory, List<SftpFile> directoryList, IProgress<string> progress)
+        SftpClient sftpClient, ISftpFile sourceRemoteDirectory, List<ISftpFile> directoryList, IProgress<string> progress)
     {
         if (!sftpClient.IsConnected)
         {
@@ -59,7 +59,7 @@ public static class Sftp
 
         var rootDirectory = sftpClient.Get(sourceRemotePath);
 
-        var allDirectoriesList = new List<SftpFile> { rootDirectory };
+        var allDirectoriesList = new List<ISftpFile> { rootDirectory };
 
         progress.Report("Finding All Directories...");
 
@@ -104,6 +104,12 @@ public static class Sftp
                 {
                     progress.Report($"   SFTP File Download - {fileCount} of {filesToDownload.Count}");
                     progress.Report($"      to: {destinationFilePath}");
+                }
+
+                //TODO: MD5 Checks?
+                if (File.Exists(destinationFilePath))
+                {
+                    continue;
                 }
 
                 await DownloadFile(sftpClient, loopFiles.FullName, destinationFilePath);

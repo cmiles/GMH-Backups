@@ -7,11 +7,11 @@ namespace GmhWorkshop.Jobs;
 /// <summary>
 ///     Pro
 /// </summary>
-public static class TempestWeatherDayFileBackup
+public static class TempestWeatherBackup
 {
     public static async Task Run(WorkshopSettings settings, IProgress<string> progress)
     {
-        Log.Information("Starting {jobName}", "TempestWeatherBackup");
+        Log.Information("Starting {jobName}", nameof(TempestWeatherBackup));
 
         if (string.IsNullOrWhiteSpace(settings.TempestAccessToken))
         {

@@ -21,4 +21,7 @@ public class WorkshopSettings
     public string EcobeeEmail { get; set; }
     public string EcobeePassword { get; set; }
     public string EcobeeBackupDirectory { get; set; }
+    public string VrmEmail { get; set; }
+    public string VrmPassword { get; set; }
+    public string VrmBackupDirectory { get; set; }
 }
