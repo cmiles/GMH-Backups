@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GmhWorkshop.CommonTools\GmhWorkshop.CommonTools.csproj" />
     <ProjectReference Include="..\GmhWorkshop.WeatherFlowTempest\GmhWorkshop.WeatherFlowTempest.csproj" />
   </ItemGroup>
 
