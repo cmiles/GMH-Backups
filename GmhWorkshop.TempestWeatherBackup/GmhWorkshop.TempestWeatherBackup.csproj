@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GmhWorkshop.CommonTools\GmhWorkshop.CommonTools.csproj" />
+    <ProjectReference Include="..\GmhWorkshop.WeatherFlowTempest\GmhWorkshop.WeatherFlowTempest.csproj" />
+  </ItemGroup>
+
+</Project>
