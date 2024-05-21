@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <UserSecretsId>bce42736-27fe-4831-9c4e-afd887caf74d</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
