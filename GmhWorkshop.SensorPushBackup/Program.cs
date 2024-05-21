@@ -39,7 +39,7 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
 {
     SettingsFile = settingsFileFromCommandline,
     SettingsFileIdentifier = SensorPushBackupSettings.SettingsTypeIdentifier,
-    VaultServiceIdentifier = "http://sensorpushbackup.com",
+    VaultServiceIdentifier = "http://sensorpushbackup.test",
     SettingsFileProperties =
     [
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -48,8 +48,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
             PropertyEntryHelp =
                 "The email to use to login to the SensorPush API.",
             HideEnteredValue = false,
-            PropertyIsValid = PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushEmail),
-            UserEntryIsValid = UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushEmail),
+            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.SensorPushEmail = userEntry.Trim()
         },
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -58,8 +58,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
             PropertyEntryHelp =
                 "The password to use to login to the SensorPush API.",
             HideEnteredValue = true,
-            PropertyIsValid = PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushPassword),
-            UserEntryIsValid = UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushPassword),
+            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.SensorPushPassword = userEntry.Trim()
         },
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -69,8 +69,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
                 "The backup directory will be used to save the backup data - it is best to dedicate a directory just to this data to avoid conflicts with other data.",
             HideEnteredValue = false,
             PropertyIsValid =
-                PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushBackupDirectory),
-            UserEntryIsValid = UserEntryIsValidIfNotNullOrWhiteSpace(),
+                ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushBackupDirectory),
+            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.SensorPushBackupDirectory = userEntry.Trim()
         },
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -79,8 +79,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
             PropertyEntryHelp =
                 "The number of days back to check for backups.",
             HideEnteredValue = false,
-            PropertyIsValid = PropertyIsValidIfPositiveInt<SensorPushBackupSettings>(x => x.SensorPushDaysBack),
-            UserEntryIsValid = UserEntryIsValidIfInt(),
+            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfPositiveInt<SensorPushBackupSettings>(x => x.SensorPushDaysBack),
+            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfInt(),
             SetValue = (settings, userEntry) => settings.SensorPushDaysBack = int.Parse(userEntry)
         }
     ]
@@ -279,72 +279,3 @@ foreach (var loopDays in devicesAndDaysToDownload)
 
 Log.Information("Finished {jobName}", "SensorPushWeatherBackup");
 
-Func<T, bool> ShouldSetPropertyIfNullOrWhiteSpace<T>(Func<T, string> propertySelector)
-{
-    return settings =>
-    {
-        if (string.IsNullOrWhiteSpace(propertySelector(settings)))
-        {
-            return true;
-        }
-
-        return false;
-    };
-}
-
-Func<T, (bool isValid, string message)> PropertyIsValidIfNotNullOrWhiteSpace<T>(Func<T, string> propertySelector)
-{
-    return settings =>
-    {
-        if (string.IsNullOrWhiteSpace(propertySelector(settings)))
-        {
-            return (false, "Value can not be blank.");
-        }
-
-        return (true, string.Empty);
-    };
-}
-
-Func<T, (bool isValid, string message)> PropertyIsValidIfPositiveInt<T>(Func<T, int> propertySelector)
-{
-    return backupSettings =>
-    {
-        if (propertySelector(backupSettings) < 1)
-        {
-            return (false, "Value must be a positive number.");
-        }
-
-        return (true, string.Empty);
-    };
-}
-
-Func<string, (bool isValid, string message)> UserEntryIsValidIfNotNullOrWhiteSpace()
-{
-    return userEntry =>
-    {
-        if (string.IsNullOrWhiteSpace(userEntry))
-        {
-            return (false, "The value can not be blank.");
-        }
-
-        return (true, string.Empty);
-    };
-}
-
-Func<string, (bool isValid, string message)> UserEntryIsValidIfInt()
-{
-    return userEntry =>
-    {
-        if (string.IsNullOrWhiteSpace(userEntry))
-        {
-            return (false, "The value can not be blank.");
-        }
-
-        if (!int.TryParse(userEntry, out _))
-        {
-            return (false, "The value must be a number.");
-        }
-
-        return (true, string.Empty);
-    };
-}

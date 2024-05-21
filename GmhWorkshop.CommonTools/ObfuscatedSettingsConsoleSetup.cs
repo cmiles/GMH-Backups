@@ -50,7 +50,7 @@ public class ObfuscatedSettingsConsoleSetup<T> where T : class, ISettingsFileTyp
                 return (false, new T());
             }
 
-            store.AddOrUpdate("http://sensorpushbackup.com", "AutomatedUserSettings", userSettingsFileKey);
+            store.AddOrUpdate(VaultServiceIdentifier, "AutomatedUserSettings", userSettingsFileKey);
             obfuscationKey = userSettingsFileKey;
         }
 
