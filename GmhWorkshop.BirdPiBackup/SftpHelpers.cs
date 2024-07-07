@@ -1,11 +1,11 @@
-﻿using Renci.SshNet;
+﻿using System.Text.RegularExpressions;
+using Renci.SshNet;
 using Renci.SshNet.Sftp;
 using Serilog;
-using System.Text.RegularExpressions;
 
-namespace GmhWorkshop.CommonTools;
+namespace GmhWorkshop.BirdPiBackup;
 
-public static class SftpTools
+public static class SftpHelpers
 {
     public static void DirectoryList(
         SftpClient sftpClient, ISftpFile sourceRemoteDirectory, List<ISftpFile> directoryList, IProgress<string> progress)

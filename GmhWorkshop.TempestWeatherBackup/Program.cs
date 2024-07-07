@@ -1,42 +1,50 @@
 ﻿using System.Text.Json;
-using GmhWorkshop.CommonTools;
 using GmhWorkshop.TempestWeatherBackup;
 using GmhWorkshop.WeatherFlowTempest;
+using Microsoft.Extensions.Logging;
+using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.VaultfuscationTools;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
-using Serilog.Events;
+using Serilog.Extensions.Logging;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Verbose()
     .Enrich.WithCallerInfo(true,
         "GmhWorkshop.",
         "gmhworkshop")
-    .WriteTo.Console(LogEventLevel.Verbose)
     .CreateLogger();
 
-AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
 {
     Log.Fatal(eventArgs.ExceptionObject as Exception,
         $"Unhandled Exception {(eventArgs.ExceptionObject as Exception)?.Message ?? ""}");
     Log.CloseAndFlush();
-    return;
 };
 
 if (args.Length != 1)
 {
     Log.Error(
-        $"The Settings File must be provided as the only argument to this program (found {args.Count()} arguments)");
+        $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
     await Log.CloseAndFlushAsync();
     return;
 }
 
-var settingsFileFromCommandline = args[0];
+var cleanedSettingsFile = args[0].Trim();
 
-var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TempestWeatherBackupSettings>()
+var interactive = !args.Any(x => x.Contains("-notinteractive", StringComparison.OrdinalIgnoreCase));
+var promptAsIfNewFile = args.Any(x => x.Contains("-redo", StringComparison.OrdinalIgnoreCase));
+
+var msLogger = new SerilogLoggerFactory(Log.Logger)
+    .CreateLogger<ObfuscatedSettingsConsoleSetup<TempestWeatherBackupSettings>>();
+
+var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TempestWeatherBackupSettings>(msLogger)
 {
-    SettingsFile = settingsFileFromCommandline,
+    SettingsFile = cleanedSettingsFile,
     SettingsFileIdentifier = TempestWeatherBackupSettings.SettingsTypeIdentifier,
-    VaultServiceIdentifier = "http://tempestweatherbackup.test",
+    VaultServiceIdentifier = "http://tempestweatherbackup.private",
+    Interactive = interactive,
+    PromptAsIfNewFile = promptAsIfNewFile,
     SettingsFileProperties =
     [
         new SettingsFileProperty<TempestWeatherBackupSettings>
@@ -46,9 +54,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TempestWeatherB
                 "The token used to login to the Tempest WeatherFlow API.",
             HideEnteredValue = true,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<TempestWeatherBackupSettings>(x =>
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TempestWeatherBackupSettings>(x =>
                     x.TempestAccessToken),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TempestAccessToken = userEntry.Trim()
         },
         new SettingsFileProperty<TempestWeatherBackupSettings>
@@ -58,9 +66,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TempestWeatherB
                 "The device to Backup.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfPositiveInt<TempestWeatherBackupSettings>(x =>
+                ObfuscatedSettingsHelpers.PropertyIsValidIfPositiveInt<TempestWeatherBackupSettings>(x =>
                     x.TempestDeviceId),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfInt(),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfInt(),
             SetValue = (settings, userEntry) => settings.TempestDeviceId = int.Parse(userEntry)
         },
         new SettingsFileProperty<TempestWeatherBackupSettings>
@@ -70,9 +78,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TempestWeatherB
                 "The backup directory will be used to save the backup data - it is best to dedicate a directory just to this data to avoid conflicts with other data.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<TempestWeatherBackupSettings>(x =>
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TempestWeatherBackupSettings>(x =>
                     x.TempestFileBackupDirectory),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TempestFileBackupDirectory = userEntry.Trim()
         },
         new SettingsFileProperty<TempestWeatherBackupSettings>
@@ -82,9 +90,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TempestWeatherB
                 "The number of days back to check for backups.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfPositiveInt<TempestWeatherBackupSettings>(x =>
+                ObfuscatedSettingsHelpers.PropertyIsValidIfPositiveInt<TempestWeatherBackupSettings>(x =>
                     x.TempestDaysBack),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfInt(),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfInt(),
             SetValue = (settings, userEntry) => settings.TempestDaysBack = int.Parse(userEntry)
         }
     ]
@@ -205,7 +213,7 @@ foreach (var loopDownloads in downloads)
     }
     catch (Exception e)
     {
-        Log.ForContext("hint", "This error is skipped and execution continues - because this method scans" +
+        Log.ForContext("hint", "This error is skipped and execution continues - because this method scans " +
                                "at least one previous month the assumption is that there will be multiple " +
                                "attempts at writing this date (this method is best used daily or weekly) and " +
                                "that file system errors are likely to be transient.")

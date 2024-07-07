@@ -1,42 +1,49 @@
 ﻿using GmhWorkshop.BirdPiBackup;
-using GmhWorkshop.CommonTools;
-using Serilog.Events;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
 using Renci.SshNet;
-using System;
+using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.VaultfuscationTools;
+using Serilog.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Verbose()
     .Enrich.WithCallerInfo(true,
         "GmhWorkshop.",
         "gmhworkshop")
-    .WriteTo.Console(LogEventLevel.Verbose)
     .CreateLogger();
 
-AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
 {
     Log.Fatal(eventArgs.ExceptionObject as Exception,
         $"Unhandled Exception {(eventArgs.ExceptionObject as Exception)?.Message ?? ""}");
     Log.CloseAndFlush();
-    return;
 };
 
 if (args.Length != 1)
 {
     Log.Error(
-        $"The Settings File must be provided as the only argument to this program (found {args.Count()} arguments)");
+        $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
     await Log.CloseAndFlushAsync();
     return;
 }
 
-var settingsFileFromCommandline = args[0];
+var cleanedSettingsFile = args[0].Trim();
 
-var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSettings>()
+var interactive = !args.Any(x => x.Contains("-notinteractive", StringComparison.OrdinalIgnoreCase));
+var promptAsIfNewFile = args.Any(x => x.Contains("-redo", StringComparison.OrdinalIgnoreCase));
+
+var msLogger = new SerilogLoggerFactory(Log.Logger)
+    .CreateLogger<ObfuscatedSettingsConsoleSetup<BirdPiBackupSettings>>();
+
+var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSettings>(msLogger)
 {
-    SettingsFile = settingsFileFromCommandline,
+    SettingsFile = cleanedSettingsFile,
     SettingsFileIdentifier = BirdPiBackupSettings.SettingsTypeIdentifier,
-    VaultServiceIdentifier = "http://birdpibackup.test",
+    VaultServiceIdentifier = "http://birdpibackup.private",
+    Interactive = interactive,
+    PromptAsIfNewFile = promptAsIfNewFile,
     SettingsFileProperties =
     [
         new SettingsFileProperty<BirdPiBackupSettings>
@@ -45,8 +52,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSet
             PropertyEntryHelp =
                 "The User Name used to login via SFTP to the BirdPi.",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiSftpUser),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiSftpUser),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.BirdPiSftpUser = userEntry.Trim()
         },
         new SettingsFileProperty<BirdPiBackupSettings>
@@ -55,8 +62,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSet
             PropertyEntryHelp =
                 "The SFTP password for the BirdPi.",
             HideEnteredValue = true,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiSftpPassword),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiSftpPassword),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.BirdPiSftpPassword = userEntry.Trim()
         },
         new SettingsFileProperty<BirdPiBackupSettings>
@@ -66,8 +73,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSet
                 "The backup directory will be used to save the backup data - it is best to dedicate a directory just to this data to avoid conflicts with other data.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiBackupDirectory),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiBackupDirectory),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.BirdPiBackupDirectory = userEntry.Trim()
         },
         new SettingsFileProperty<BirdPiBackupSettings>
@@ -76,8 +83,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSet
             PropertyEntryHelp =
                 "The host value for the BirdPi.",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiHost),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiHost),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.BirdPiHost = userEntry.Trim()
         },
         new SettingsFileProperty<BirdPiBackupSettings>
@@ -86,8 +93,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<BirdPiBackupSet
             PropertyEntryHelp =
                 "The parent, home, directory containing the BirdNET-Pi directory - this may be the home directory of the user used to login via SFTP, but not always...",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiRemoteHomeDirectory),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<BirdPiBackupSettings>(x => x.BirdPiRemoteHomeDirectory),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.BirdPiRemoteHomeDirectory = userEntry.Trim()
         },
     ]
@@ -120,19 +127,19 @@ sftpClient.Connect();
 var birdDbLocalBackupFile = Path.Combine(dateVersionedBackupDirectory.FullName, "birds.db");
 var birdDbRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/scripts/birds.db");
 Log.Verbose("Writing {remotePath} to {localPath}", birdDbRemotePath, birdDbLocalBackupFile);
-await SftpTools.DownloadFile(sftpClient, birdDbRemotePath,
+await SftpHelpers.DownloadFile(sftpClient, birdDbRemotePath,
     birdDbLocalBackupFile);
 
 var birdnetConfLocalBackupFile = Path.Combine(dateVersionedBackupDirectory.FullName, "birdnet.conf");
 var birdnetConfRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/birdnet.conf");
 Log.Verbose("Writing {remotePath} to {localPath}", birdnetConfRemotePath, birdnetConfLocalBackupFile);
-await SftpTools.DownloadFile(sftpClient, birdnetConfRemotePath,
+await SftpHelpers.DownloadFile(sftpClient, birdnetConfRemotePath,
     birdnetConfLocalBackupFile);
 
 var appriseTxtLocalBackupFile = Path.Combine(dateVersionedBackupDirectory.FullName, "apprise.txt");
 var appriseTxtRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/apprise.txt");
 Log.Verbose("Writing {remotePath} to {localPath}", appriseTxtRemotePath, appriseTxtLocalBackupFile);
-await SftpTools.DownloadFile(sftpClient, appriseTxtRemotePath,
+await SftpHelpers.DownloadFile(sftpClient, appriseTxtRemotePath,
     appriseTxtLocalBackupFile);
 
 var commonBackupDirectory =
@@ -140,10 +147,10 @@ var commonBackupDirectory =
 
 if (!commonBackupDirectory.Exists) commonBackupDirectory.Create();
 
-await SftpTools.DownloadDirectoriesAndRegularFiles(sftpClient,
+await SftpHelpers.DownloadDirectoriesAndRegularFiles(sftpClient,
     Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/By_Date"),
     Path.Combine(commonBackupDirectory.FullName, "Extracted", "By_Date"), new ConsoleProgress());
-await SftpTools.DownloadDirectoriesAndRegularFiles(sftpClient,
+await SftpHelpers.DownloadDirectoriesAndRegularFiles(sftpClient,
     Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/Charts"),
     Path.Combine(commonBackupDirectory.FullName, "Extracted", "Charts"), new ConsoleProgress());
 

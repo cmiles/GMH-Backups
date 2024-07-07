@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GmhWorkshop.WeatherFlowTempest\GmhWorkshop.WeatherFlowTempest.csproj" />
+    <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.VaultfuscationTools\PointlessWaymarks.VaultfuscationTools.csproj" />
   </ItemGroup>
 
 </Project>

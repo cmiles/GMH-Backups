@@ -1,49 +1,55 @@
 ﻿using CsvHelper.Configuration;
 using CsvHelper;
-using GmhWorkshop.CommonTools;
 using GmhWorkshop.TucsonElectricPowerBackup;
 using Microsoft.Playwright;
 using Pw02.GreenButtonXml;
 using Pw02.TepCsv;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
-using Serilog.Events;
 using System.Globalization;
 using System.IO.Compression;
 using System.Xml.Serialization;
-using System;
+using PointlessWaymarks.VaultfuscationTools;
+using Serilog.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Verbose()
     .Enrich.WithCallerInfo(true,
         "GmhWorkshop.",
         "gmhworkshop")
-    .WriteTo.Console(LogEventLevel.Verbose)
     .CreateLogger();
 
-AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
 {
     Log.Fatal(eventArgs.ExceptionObject as Exception,
         $"Unhandled Exception {(eventArgs.ExceptionObject as Exception)?.Message ?? ""}");
     Log.CloseAndFlush();
-    return;
 };
 
 if (args.Length != 1)
 {
     Log.Error(
-        $"The Settings File must be provided as the only argument to this program (found {args.Count()} arguments)");
+        $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
     await Log.CloseAndFlushAsync();
     return;
 }
 
-var settingsFileFromCommandline = args[0];
+var cleanedSettingsFile = args[0].Trim();
 
-var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricPowerBackupSettings>()
+var interactive = !args.Any(x => x.Contains("-notinteractive", StringComparison.OrdinalIgnoreCase));
+var promptAsIfNewFile = args.Any(x => x.Contains("-redo", StringComparison.OrdinalIgnoreCase));
+
+var msLogger = new SerilogLoggerFactory(Log.Logger)
+    .CreateLogger<ObfuscatedSettingsConsoleSetup<TucsonElectricPowerBackupSettings>>();
+
+var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricPowerBackupSettings>(msLogger)
 {
-    SettingsFile = settingsFileFromCommandline,
+    SettingsFile = cleanedSettingsFile,
     SettingsFileIdentifier = TucsonElectricPowerBackupSettings.SettingsTypeIdentifier,
-    VaultServiceIdentifier = "http://sensorpushbackup.test",
+    VaultServiceIdentifier = "http://sensorpushbackup.private",
+    Interactive = interactive,
+    PromptAsIfNewFile = promptAsIfNewFile,
     SettingsFileProperties =
     [
         new SettingsFileProperty<TucsonElectricPowerBackupSettings>
@@ -52,8 +58,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricP
             PropertyEntryHelp =
                 "The email to use to login to Tucson Electric Power.",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepEmail),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepEmail),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TepEmail = userEntry.Trim()
         },
         new SettingsFileProperty<TucsonElectricPowerBackupSettings>
@@ -62,8 +68,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricP
             PropertyEntryHelp =
                 "The password to use to login to Tucson Electric Power.",
             HideEnteredValue = true,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepPassword),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepPassword),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TepPassword = userEntry.Trim()
         },
         new SettingsFileProperty<TucsonElectricPowerBackupSettings>
@@ -73,8 +79,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricP
                 "The backup directory will be used to save the backup data - it is best to dedicate a directory just to this data to avoid conflicts with other data.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepBackupDirectory),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepBackupDirectory),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TepBackupDirectory = userEntry.Trim()
         }
     ]
@@ -99,7 +105,7 @@ Log.Debug("Starting Playwright and Logging into TEP");
 
 //See https://playwright.dev/dotnet/docs/browsers#install-browsers-via-api - this should avoid the need to run the 
 //manual powershell script on the browsers and I think keep things up to date.
-var exitCode = Microsoft.Playwright.Program.Main(["install"]); ;
+var exitCode = Microsoft.Playwright.Program.Main(["install"]);
 
 if (exitCode != 0)
     Log.ForContext("hint",
@@ -132,8 +138,8 @@ await page.GetByLabel("Password*").FillAsync(settings.TepPassword);
 await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Login" }).ClickAsync();
 
 //2023-7-7: There are maybe un-needed delays throughout this code - the target for this routine
-//is an unattended ?weekly run of the code so it doesn't matter - I'd like for the
-//code to be cleaner but mainly I want it to run without issue...
+//is an unattended ?weekly run of the code, so it doesn't matter - I'd like for the
+//code to be cleaner, but mainly I want it to run without issue...
 await Task.Delay(1000);
 
 await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -143,7 +149,8 @@ await Task.Delay(5000);
 //2023-7-7: This is not what is recommended in the Playwright documentation but esp. as a
 //newer Playwright user I'm a bit puzzled about a better way. I suspect that 
 //Playwright's emphasis on testing over scraping influences the suggestions in
-//the docs about what is advisable? Also this apparent mis-spelling is 'correct'...
+//the docs about what is advisable? Also, this apparent misspelling is 'correct'...
+// ReSharper disable once StringLiteralTypo
 var accountLinksSelector = "css=#AcctSelTabel > tbody > tr > td:first-of-type > a";
 
 var countOfAccounts = (await page.Locator(accountLinksSelector).AllAsync()).Count;
@@ -184,7 +191,7 @@ for (var i = 0; i < countOfAccounts; i++)
 
     var csvTempFile =
         new FileInfo(Path.Combine(backupDirectory.FullName,
-            @$"TempDownload-TEP-Account-{accountNumber}-CSV-{frozenNow:yyyy-MM-dd-HH-mm-ss}.csv"));
+            $"TempDownload-TEP-Account-{accountNumber}-CSV-{frozenNow:yyyy-MM-dd-HH-mm-ss}.csv"));
 
     await csvDownload.SaveAsAsync(csvTempFile.FullName);
     await csvDownload.DeleteAsync();
@@ -209,12 +216,12 @@ for (var i = 0; i < countOfAccounts; i++)
     var startDate = csvRows.MinBy(x => x.Date)!.Date;
 
     //The last entry for a day will list 12am as the end time - meaning 0 on the following day.
-    var lastDateEntry = csvRows.OrderBy(x => x.Date).ThenBy(x => x.StartTime).Last()!;
+    var lastDateEntry = csvRows.OrderBy(x => x.Date).ThenBy(x => x.StartTime).Last();
     var lastDate = lastDateEntry.EndTime == TimeOnly.MinValue ? lastDateEntry.Date.AddDays(1) : lastDateEntry.Date;
 
     var csvDatedFile =
         new FileInfo(Path.Combine(backupDirectory.FullName,
-            @$"TEP-Account-{accountNumber}-CSV-{startDate:yyyy-MM-dd}-to-{lastDate:yyyy-MM-dd}.csv"));
+            $"TEP-Account-{accountNumber}-CSV-{startDate:yyyy-MM-dd}-to-{lastDate:yyyy-MM-dd}.csv"));
 
     if (!csvDatedFile.Exists)
     {
@@ -240,7 +247,7 @@ for (var i = 0; i < countOfAccounts; i++)
 
     var xmlTempZipFile =
         new FileInfo(Path.Combine(backupDirectory.FullName,
-            @$"TempDownload-TEP-Account-{accountNumber}-XML-ZIP-{frozenNow:yyyy-MM-dd-HH-mm-ss}.zip"));
+            $"TempDownload-TEP-Account-{accountNumber}-XML-ZIP-{frozenNow:yyyy-MM-dd-HH-mm-ss}.zip"));
 
     await xmlZipTempDownload.SaveAsAsync(xmlTempZipFile.FullName);
     await xmlZipTempDownload.DeleteAsync();
@@ -255,7 +262,7 @@ for (var i = 0; i < countOfAccounts; i++)
         {
             var temporaryXmlFile =
                 new FileInfo(Path.Combine(backupDirectory.FullName,
-                    @$"TempDownload-TEP-Account-{accountNumber}-XML-{n}-{frozenNow:yyyy-MM-dd-HH-mm-ss}.xml"));
+                    $"TempDownload-TEP-Account-{accountNumber}-XML-{n}-{frozenNow:yyyy-MM-dd-HH-mm-ss}.xml"));
             xmlFiles[n].ExtractToFile(temporaryXmlFile.FullName);
 
             var serializer = new XmlSerializer(typeof(feed));
@@ -279,7 +286,7 @@ for (var i = 0; i < countOfAccounts; i++)
                 .AddSeconds(endIntervalEntry.timePeriod.duration).Add(xmlReadings.updated.Offset);
 
             var finalFile = new FileInfo(Path.Combine(backupDirectory.FullName,
-                @$"TEP-Account-{accountNumber}-XML-{startDateTime:yyyy-MM-dd}-to-{endDateTime:yyyy-MM-dd}.xml"));
+                $"TEP-Account-{accountNumber}-XML-{startDateTime:yyyy-MM-dd}-to-{endDateTime:yyyy-MM-dd}.xml"));
 
             if (!finalFile.Exists)
             {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GmhWorkshop.CommonTools;
+using PointlessWaymarks.VaultfuscationTools;
 
 namespace GmhWorkshop.TempestWeatherBackup;
 public class TempestWeatherBackupSettings : ISettingsFileType

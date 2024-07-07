@@ -1,10 +1,12 @@
 ﻿using System.Text.Json;
-using GmhWorkshop.CommonTools;
 using GmhWorkshop.SensorPush;
 using GmhWorkshop.SensorPushBackup;
+using Microsoft.Extensions.Logging;
+using PointlessWaymarks.CommonTools;
+using PointlessWaymarks.VaultfuscationTools;
 using Serilog;
 using Serilog.Enrichers.CallerInfo;
-using Serilog.Events;
+using Serilog.Extensions.Logging;
 using Sensor = GmhWorkshop.SensorPush.Sensor;
 using SensorPushCommonTools = GmhWorkshop.SensorPush.SensorPushCommonTools;
 using SensorsRequest = GmhWorkshop.SensorPush.SensorsRequest;
@@ -14,32 +16,38 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithCallerInfo(true,
         "GmhWorkshop.",
         "gmhworkshop")
-    .WriteTo.Console(LogEventLevel.Verbose)
     .CreateLogger();
 
-AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
 {
     Log.Fatal(eventArgs.ExceptionObject as Exception,
         $"Unhandled Exception {(eventArgs.ExceptionObject as Exception)?.Message ?? ""}");
     Log.CloseAndFlush();
-    return;
 };
 
 if (args.Length != 1)
 {
     Log.Error(
-        $"The Settings File must be provided as the only argument to this program (found {args.Count()} arguments)");
+        $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
     await Log.CloseAndFlushAsync();
     return;
 }
 
-var settingsFileFromCommandline = args[0];
+var cleanedSettingsFile = args[0].Trim();
 
-var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBackupSettings>()
+var interactive = !args.Any(x => x.Contains("-notinteractive", StringComparison.OrdinalIgnoreCase));
+var promptAsIfNewFile = args.Any(x => x.Contains("-redo", StringComparison.OrdinalIgnoreCase));
+
+var msLogger = new SerilogLoggerFactory(Log.Logger)
+    .CreateLogger<ObfuscatedSettingsConsoleSetup<SensorPushBackupSettings>>();
+
+var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBackupSettings>(msLogger)
 {
-    SettingsFile = settingsFileFromCommandline,
+    SettingsFile = cleanedSettingsFile,
     SettingsFileIdentifier = SensorPushBackupSettings.SettingsTypeIdentifier,
-    VaultServiceIdentifier = "http://sensorpushbackup.test",
+    VaultServiceIdentifier = "http://sensorpushbackup.private",
+    Interactive = interactive,
+    PromptAsIfNewFile = promptAsIfNewFile,
     SettingsFileProperties =
     [
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -48,8 +56,10 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
             PropertyEntryHelp =
                 "The email to use to login to the SensorPush API.",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushEmail),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid =
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x =>
+                    x.SensorPushEmail),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.SensorPushEmail = userEntry.Trim()
         },
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -58,8 +68,10 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
             PropertyEntryHelp =
                 "The password to use to login to the SensorPush API.",
             HideEnteredValue = true,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushPassword),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+            PropertyIsValid =
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x =>
+                    x.SensorPushPassword),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.SensorPushPassword = userEntry.Trim()
         },
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -69,8 +81,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
                 "The backup directory will be used to save the backup data - it is best to dedicate a directory just to this data to avoid conflicts with other data.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsConsoleTools.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x => x.SensorPushBackupDirectory),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfNotNullOrWhiteSpace(),
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<SensorPushBackupSettings>(x =>
+                    x.SensorPushBackupDirectory),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.SensorPushBackupDirectory = userEntry.Trim()
         },
         new SettingsFileProperty<SensorPushBackupSettings>
@@ -79,8 +92,10 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBacku
             PropertyEntryHelp =
                 "The number of days back to check for backups.",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsConsoleTools.PropertyIsValidIfPositiveInt<SensorPushBackupSettings>(x => x.SensorPushDaysBack),
-            UserEntryIsValid = ObfuscatedSettingsConsoleTools.UserEntryIsValidIfInt(),
+            PropertyIsValid =
+                ObfuscatedSettingsHelpers.PropertyIsValidIfPositiveInt<SensorPushBackupSettings>(x =>
+                    x.SensorPushDaysBack),
+            UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfInt(),
             SetValue = (settings, userEntry) => settings.SensorPushDaysBack = int.Parse(userEntry)
         }
     ]
@@ -170,7 +185,7 @@ foreach (var loopDays in devicesAndDaysToDownload)
     {
         Sensors = loopDays.device.Id.AsList(), Active = true,
         //7/3/2023 - It appears that the baseline is one reading per second - the 99999 value is just for 
-        //safety to try to adjust if once per second changes. Also the API specifies that at a certain
+        //safety to try to adjust if once per second changes. Also, the API specifies that at a certain
         //size (5mb) the request will be truncated.
         Limit = 99999,
         StartTime =
@@ -248,7 +263,7 @@ foreach (var loopDays in devicesAndDaysToDownload)
     }
     catch (Exception e)
     {
-        Log.ForContext("hint", "This error is skipped and execution continues - because this method scans" +
+        Log.ForContext("hint", "This error is skipped and execution continues - because this method scans " +
                                "at least one previous month the assumption is that there will be multiple " +
                                "attempts at writing this date (this method is best used daily or weekly) and " +
                                "that file system errors are likely to be transient.")
@@ -278,4 +293,3 @@ foreach (var loopDays in devicesAndDaysToDownload)
 }
 
 Log.Information("Finished {jobName}", "SensorPushWeatherBackup");
-
