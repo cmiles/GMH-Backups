@@ -16,6 +16,10 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithCallerInfo(true,
         "GmhWorkshop.",
         "gmhworkshop")
+    .Enrich
+    .FromGlobalLogContext()
+    .MinimumLevel.Verbose()
+    .LogToConsole()
     .CreateLogger();
 
 AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
@@ -25,8 +29,10 @@ AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
     Log.CloseAndFlush();
 };
 
-if (args.Length != 1)
+if (args.Length < 1)
 {
+    Console.WriteLine("You must provide the name for the settings file to use - this can be an existing settings file or a new file to create.");
+
     Log.Error(
         $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
     await Log.CloseAndFlushAsync();

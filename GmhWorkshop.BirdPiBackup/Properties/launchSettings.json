@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "GmhWorkshop.BirdPiBackup": {
-      "commandName": "Project",
-      "commandLineArgs": "F:\\HouseShare\\GmhDataWell\\NorthWallBirdPi\\NorthWallBirdPiBackupSettings02.json"
-    }
-  }
-}

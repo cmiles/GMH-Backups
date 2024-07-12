@@ -12,6 +12,10 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithCallerInfo(true,
         "GmhWorkshop.",
         "gmhworkshop")
+    .Enrich
+    .FromGlobalLogContext()
+    .MinimumLevel.Verbose()
+    .LogToConsole()
     .CreateLogger();
 
 AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
@@ -21,8 +25,10 @@ AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
     Log.CloseAndFlush();
 };
 
-if (args.Length != 1)
+if (args.Length < 1)
 {
+    Console.WriteLine("You must provide the name for the settings file to use - this can be an existing settings file or a new file to create.");
+
     Log.Error(
         $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
     await Log.CloseAndFlushAsync();
@@ -125,19 +131,19 @@ var sftpClient = new SftpClient(settings.BirdPiHost, settings.BirdPiSftpUser, se
 sftpClient.Connect();
 
 var birdDbLocalBackupFile = Path.Combine(dateVersionedBackupDirectory.FullName, "birds.db");
-var birdDbRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/scripts/birds.db");
+var birdDbRemotePath = StringTools.UrlCombine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/scripts/birds.db");
 Log.Verbose("Writing {remotePath} to {localPath}", birdDbRemotePath, birdDbLocalBackupFile);
 await SftpHelpers.DownloadFile(sftpClient, birdDbRemotePath,
     birdDbLocalBackupFile);
 
 var birdnetConfLocalBackupFile = Path.Combine(dateVersionedBackupDirectory.FullName, "birdnet.conf");
-var birdnetConfRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/birdnet.conf");
+var birdnetConfRemotePath = StringTools.UrlCombine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/birdnet.conf");
 Log.Verbose("Writing {remotePath} to {localPath}", birdnetConfRemotePath, birdnetConfLocalBackupFile);
 await SftpHelpers.DownloadFile(sftpClient, birdnetConfRemotePath,
     birdnetConfLocalBackupFile);
 
 var appriseTxtLocalBackupFile = Path.Combine(dateVersionedBackupDirectory.FullName, "apprise.txt");
-var appriseTxtRemotePath = Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/apprise.txt");
+var appriseTxtRemotePath = StringTools.UrlCombine(settings.BirdPiRemoteHomeDirectory, "BirdNET-Pi/apprise.txt");
 Log.Verbose("Writing {remotePath} to {localPath}", appriseTxtRemotePath, appriseTxtLocalBackupFile);
 await SftpHelpers.DownloadFile(sftpClient, appriseTxtRemotePath,
     appriseTxtLocalBackupFile);
@@ -148,10 +154,10 @@ var commonBackupDirectory =
 if (!commonBackupDirectory.Exists) commonBackupDirectory.Create();
 
 await SftpHelpers.DownloadDirectoriesAndRegularFiles(sftpClient,
-    Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/By_Date"),
+    StringTools.UrlCombine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/By_Date"),
     Path.Combine(commonBackupDirectory.FullName, "Extracted", "By_Date"), new ConsoleProgress());
 await SftpHelpers.DownloadDirectoriesAndRegularFiles(sftpClient,
-    Path.Combine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/Charts"),
+    StringTools.UrlCombine(settings.BirdPiRemoteHomeDirectory, "BirdSongs/Extracted/Charts"),
     Path.Combine(commonBackupDirectory.FullName, "Extracted", "Charts"), new ConsoleProgress());
 
 Log.Information("Finished {jobName}", "BirdPiBackup");
