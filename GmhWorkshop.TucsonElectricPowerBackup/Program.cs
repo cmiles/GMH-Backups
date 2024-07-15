@@ -1,55 +1,35 @@
-﻿using CsvHelper.Configuration;
+﻿using System.Globalization;
+using System.IO.Compression;
+using System.Xml.Serialization;
 using CsvHelper;
+using CsvHelper.Configuration;
+using GmhWorkshop.CommonTools;
 using GmhWorkshop.TucsonElectricPowerBackup;
+using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
+using PointlessWaymarks.VaultfuscationTools;
 using Pw02.GreenButtonXml;
 using Pw02.TepCsv;
 using Serilog;
-using Serilog.Enrichers.CallerInfo;
-using System.Globalization;
-using System.IO.Compression;
-using System.Xml.Serialization;
-using PointlessWaymarks.VaultfuscationTools;
 using Serilog.Extensions.Logging;
-using Microsoft.Extensions.Logging;
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Verbose()
-    .Enrich.WithCallerInfo(true,
-        "GmhWorkshop.",
-        "gmhworkshop")
-    .CreateLogger();
+var parsedSettings = await SetupTools.SetupAndGetSettingsFile(args);
 
-AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+if (string.IsNullOrWhiteSpace(parsedSettings.SettingsFile))
 {
-    Log.Fatal(eventArgs.ExceptionObject as Exception,
-        $"Unhandled Exception {(eventArgs.ExceptionObject as Exception)?.Message ?? ""}");
-    Log.CloseAndFlush();
-};
-
-if (args.Length != 1)
-{
-    Log.Error(
-        $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
-    await Log.CloseAndFlushAsync();
     return;
 }
-
-var cleanedSettingsFile = args[0].Trim();
-
-var interactive = !args.Any(x => x.Contains("-notinteractive", StringComparison.OrdinalIgnoreCase));
-var promptAsIfNewFile = args.Any(x => x.Contains("-redo", StringComparison.OrdinalIgnoreCase));
 
 var msLogger = new SerilogLoggerFactory(Log.Logger)
     .CreateLogger<ObfuscatedSettingsConsoleSetup<TucsonElectricPowerBackupSettings>>();
 
 var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricPowerBackupSettings>(msLogger)
 {
-    SettingsFile = cleanedSettingsFile,
+    SettingsFile = parsedSettings.SettingsFile,
     SettingsFileIdentifier = TucsonElectricPowerBackupSettings.SettingsTypeIdentifier,
     VaultServiceIdentifier = "http://sensorpushbackup.private",
-    Interactive = interactive,
-    PromptAsIfNewFile = promptAsIfNewFile,
+    Interactive = parsedSettings.Interactive,
+    PromptAsIfNewFile = parsedSettings.PromptAsIfNewFile,
     SettingsFileProperties =
     [
         new SettingsFileProperty<TucsonElectricPowerBackupSettings>
@@ -58,7 +38,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricP
             PropertyEntryHelp =
                 "The email to use to login to Tucson Electric Power.",
             HideEnteredValue = false,
-            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepEmail),
+            PropertyIsValid =
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x =>
+                    x.TepEmail),
             UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TepEmail = userEntry.Trim()
         },
@@ -68,7 +50,9 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricP
             PropertyEntryHelp =
                 "The password to use to login to Tucson Electric Power.",
             HideEnteredValue = true,
-            PropertyIsValid = ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepPassword),
+            PropertyIsValid =
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x =>
+                    x.TepPassword),
             UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TepPassword = userEntry.Trim()
         },
@@ -79,7 +63,8 @@ var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<TucsonElectricP
                 "The backup directory will be used to save the backup data - it is best to dedicate a directory just to this data to avoid conflicts with other data.",
             HideEnteredValue = false,
             PropertyIsValid =
-                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x => x.TepBackupDirectory),
+                ObfuscatedSettingsHelpers.PropertyIsValidIfNotNullOrWhiteSpace<TucsonElectricPowerBackupSettings>(x =>
+                    x.TepBackupDirectory),
             UserEntryIsValid = ObfuscatedSettingsHelpers.UserEntryIsValidIfNotNullOrWhiteSpace(),
             SetValue = (settings, userEntry) => settings.TepBackupDirectory = userEntry.Trim()
         }
@@ -108,11 +93,13 @@ Log.Debug("Starting Playwright and Logging into TEP");
 var exitCode = Microsoft.Playwright.Program.Main(["install"]);
 
 if (exitCode != 0)
+{
     Log.ForContext("hint",
             "Playwright requires binaries for the browsers - the Ats Buying Notes calls the Playwright install routine each time it runs both to make sure they are installed and also to keep on latest. This failure means there was an install problem that may need to be investigated - the program will continue to try to run since the needed binaries may already be present and the error could be transient. See the Playwright install docs for details including a Powershell script you can run to do the install (included with this program).")
         .Warning(
             "Buying Note Ats - Trouble Running the Playwright Browser Install - Exit Code {exitCode} Continuing",
             exitCode);
+}
 
 using var playwright = await Playwright.CreateAsync();
 await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -310,6 +297,6 @@ for (var i = 0; i < countOfAccounts; i++)
     await Task.Delay(5000);
 }
 
-await page.GetByRole(AriaRole.Button, new() { Name = "Log Out" }).ClickAsync();
+await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log Out" }).ClickAsync();
 
 Log.Information("Finished {jobName}", "TucsonElectricPowerBackup");

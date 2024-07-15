@@ -2,7 +2,7 @@
   "profiles": {
     "GmhWorkshop.TucsonElectricPowerBackup": {
       "commandName": "Project",
-      "commandLineArgs": "F:\\HouseShare\\GmhDataWell\\Tep\\GmhTepBackupSettings.json"
+      "commandLineArgs": "M:\\GmhDataWell\\Tep\\GmhTepBackupSettings02.json"
     }
   }
 }

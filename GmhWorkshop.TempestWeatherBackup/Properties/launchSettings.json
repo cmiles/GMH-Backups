@@ -2,7 +2,7 @@
   "profiles": {
     "GmhWorkshop.TempestWeatherBackup": {
       "commandName": "Project",
-      "commandLineArgs": "F:\\HouseShare\\GmhDataWell\\TempestWeatherStation\\GmhTempestBackupSettings.json"
+      "commandLineArgs": "M:\\GmhDataWell\\TempestWeatherStation\\GmhTempestBackupSettings02.json"
     }
   }
 }

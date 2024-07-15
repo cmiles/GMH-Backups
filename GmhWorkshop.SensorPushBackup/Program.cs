@@ -1,59 +1,33 @@
 ﻿using System.Text.Json;
+using GmhWorkshop.CommonTools;
 using GmhWorkshop.SensorPush;
 using GmhWorkshop.SensorPushBackup;
 using Microsoft.Extensions.Logging;
 using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.VaultfuscationTools;
 using Serilog;
-using Serilog.Enrichers.CallerInfo;
 using Serilog.Extensions.Logging;
 using Sensor = GmhWorkshop.SensorPush.Sensor;
 using SensorPushCommonTools = GmhWorkshop.SensorPush.SensorPushCommonTools;
 using SensorsRequest = GmhWorkshop.SensorPush.SensorsRequest;
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Verbose()
-    .Enrich.WithCallerInfo(true,
-        "GmhWorkshop.",
-        "gmhworkshop")
-    .Enrich
-    .FromGlobalLogContext()
-    .MinimumLevel.Verbose()
-    .LogToConsole()
-    .CreateLogger();
+var parsedSettings = await SetupTools.SetupAndGetSettingsFile(args);
 
-AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+if (string.IsNullOrWhiteSpace(parsedSettings.SettingsFile))
 {
-    Log.Fatal(eventArgs.ExceptionObject as Exception,
-        $"Unhandled Exception {(eventArgs.ExceptionObject as Exception)?.Message ?? ""}");
-    Log.CloseAndFlush();
-};
-
-if (args.Length < 1)
-{
-    Console.WriteLine("You must provide the name for the settings file to use - this can be an existing settings file or a new file to create.");
-
-    Log.Error(
-        $"The Settings File must be provided as the only argument to this program (found {args.Length} arguments)");
-    await Log.CloseAndFlushAsync();
     return;
 }
-
-var cleanedSettingsFile = args[0].Trim();
-
-var interactive = !args.Any(x => x.Contains("-notinteractive", StringComparison.OrdinalIgnoreCase));
-var promptAsIfNewFile = args.Any(x => x.Contains("-redo", StringComparison.OrdinalIgnoreCase));
 
 var msLogger = new SerilogLoggerFactory(Log.Logger)
     .CreateLogger<ObfuscatedSettingsConsoleSetup<SensorPushBackupSettings>>();
 
 var settingFileReadAndSetup = new ObfuscatedSettingsConsoleSetup<SensorPushBackupSettings>(msLogger)
 {
-    SettingsFile = cleanedSettingsFile,
+    SettingsFile = parsedSettings.SettingsFile,
     SettingsFileIdentifier = SensorPushBackupSettings.SettingsTypeIdentifier,
     VaultServiceIdentifier = "http://sensorpushbackup.private",
-    Interactive = interactive,
-    PromptAsIfNewFile = promptAsIfNewFile,
+    Interactive = parsedSettings.Interactive,
+    PromptAsIfNewFile = parsedSettings.PromptAsIfNewFile,
     SettingsFileProperties =
     [
         new SettingsFileProperty<SensorPushBackupSettings>

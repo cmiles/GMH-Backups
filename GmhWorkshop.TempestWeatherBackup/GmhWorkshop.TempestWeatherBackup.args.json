@@ -1,10 +1,10 @@
 {
   "FileVersion": 2,
-  "Id": "5f26f01a-7dda-4fbd-b76d-f682abee0f33",
+  "Id": "9184ee15-27b7-49df-b2b1-4ebd7979a0ab",
   "Items": [
     {
       "Id": "9eadaf70-5eed-457b-a3d2-3d035b122adb",
-      "Command": "F:\\HouseShare\\GmhDataWell\\TempestWeatherStation\\GmhTempestBackupSettings.json"
+      "Command": "M:\\GmhDataWell\\TempestWeatherStation\\GmhTempestBackupSettings02.json"
     }
   ]
 }
