@@ -1,6 +1,6 @@
-﻿namespace GmhWorkshop.VictronRemoteMonitoring.Models;
+﻿namespace GmhWorkshop.VictronRemoteMonitoring.ApiDtos;
 
-public abstract class InstallationRecord
+public class InstallationRecord
 {
     public int idSite { get; set; }
     public int accessLevel { get; set; }

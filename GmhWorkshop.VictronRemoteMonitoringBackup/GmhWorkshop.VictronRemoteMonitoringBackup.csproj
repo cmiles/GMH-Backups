@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GmhWorkshop.CommonTools\GmhWorkshop.CommonTools.csproj" />
+    <ProjectReference Include="..\GmhWorkshop.VictronRemoteMonitoring\GmhWorkshop.VictronRemoteMonitoring.csproj" />
+    <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.VaultfuscationTools\PointlessWaymarks.VaultfuscationTools.csproj" />
+  </ItemGroup>
+
+</Project>

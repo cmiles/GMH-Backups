@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PointlessWaymarks.VaultfuscationTools;
+﻿using PointlessWaymarks.VaultfuscationTools;
 
 namespace GmhWorkshop.TucsonElectricPowerBackup;
+
 public class TucsonElectricPowerBackupSettings : ISettingsFileType
 {
     public const string SettingsTypeIdentifier = nameof(TucsonElectricPowerBackupSettings);
+    public string TepEmail { get; set; } = string.Empty;
+    public string TepPassword { get; set; } = string.Empty;
+    public string TepBackupDirectory { get; set; } = string.Empty;
     public string SettingsType { get; set; } = SettingsTypeIdentifier;
-    public string TepEmail { get; set; }
-    public string TepPassword { get; set; }
-    public string TepBackupDirectory { get; set; }
 }

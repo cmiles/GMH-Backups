@@ -23,6 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.TucsonElectricP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.TucsonElectricPowerBackup", "GmhWorkshop.TucsonElectricPowerBackup\GmhWorkshop.TucsonElectricPowerBackup.csproj", "{689B9817-92A4-4153-BF83-E074411A607E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmhWorkshop.VictronRemoteMonitoring", "GmhWorkshop.VictronRemoteMonitoring\GmhWorkshop.VictronRemoteMonitoring.csproj", "{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GmhWorkshop.VictronRemoteMonitoringBackup", "GmhWorkshop.VictronRemoteMonitoringBackup\GmhWorkshop.VictronRemoteMonitoringBackup.csproj", "{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +115,22 @@ Global
 		{689B9817-92A4-4153-BF83-E074411A607E}.Release|Any CPU.Build.0 = Release|x64
 		{689B9817-92A4-4153-BF83-E074411A607E}.Release|x64.ActiveCfg = Release|x64
 		{689B9817-92A4-4153-BF83-E074411A607E}.Release|x64.Build.0 = Release|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Debug|Any CPU.Build.0 = Debug|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Debug|x64.ActiveCfg = Debug|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Debug|x64.Build.0 = Debug|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Release|Any CPU.ActiveCfg = Release|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Release|Any CPU.Build.0 = Release|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Release|x64.ActiveCfg = Release|x64
+		{FFEBA396-8770-4E9A-93A1-2E2004BF11DF}.Release|x64.Build.0 = Release|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Debug|Any CPU.Build.0 = Debug|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Debug|x64.ActiveCfg = Debug|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Debug|x64.Build.0 = Debug|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Release|Any CPU.ActiveCfg = Release|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Release|Any CPU.Build.0 = Release|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Release|x64.ActiveCfg = Release|x64
+		{EFC98CD4-9749-4FC2-BF4A-2BA055EF0FAA}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

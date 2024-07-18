@@ -42,7 +42,7 @@ public static class SetupTools
             Log.CloseAndFlush();
         };
 
-        if (args.Length <= 1)
+        if (args.Length < 1)
         {
             Console.WriteLine("You must provide the name for the settings file to use - this can be an existing settings file or a new file to create.");
 
