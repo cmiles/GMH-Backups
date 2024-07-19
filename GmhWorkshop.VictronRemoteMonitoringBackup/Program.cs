@@ -190,6 +190,8 @@ foreach (var loopDays in allPossibleBackupDays)
             File.WriteAllText(file.FullName, JsonSerializer.Serialize(toSave, JsonTools.WriteIndentedOptions));
         }
     }
+
+    await Task.Delay(30000);
 }
 
 Console.WriteLine("All Stats Retrieved");
