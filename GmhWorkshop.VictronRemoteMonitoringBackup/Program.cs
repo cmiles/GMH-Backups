@@ -1,11 +1,9 @@
 ﻿using System.Text.Json;
-using Flurl.Util;
 using GmhWorkshop.CommonTools;
 using GmhWorkshop.VictronRemoteMonitoring;
 using GmhWorkshop.VictronRemoteMonitoring.Models;
 using GmhWorkshop.VictronRemoteMonitoringBackup;
 using Microsoft.Extensions.Logging;
-using PointlessWaymarks.CommonTools;
 using PointlessWaymarks.CommonTools.S3;
 using PointlessWaymarks.VaultfuscationTools;
 using Serilog;
@@ -15,7 +13,7 @@ var parsedSettings = await SetupTools.SetupAndGetSettingsFile(args);
 
 if (string.IsNullOrWhiteSpace(parsedSettings.SettingsFile))
 {
-    return;
+    return -1;
 }
 
 var msLogger = new SerilogLoggerFactory(Log.Logger)
@@ -88,7 +86,7 @@ var settingsSetupResult = await settingFileReadAndSetup.Setup();
 
 if (!settingsSetupResult.isValid)
 {
-    return;
+    return -1;
 }
 
 var settings = settingsSetupResult.settings;
@@ -129,7 +127,7 @@ var tokenResponse = await VictronVrmTools.Login(settings.VrmEmail, settings.VrmP
 
 var installs = await VictronVrmTools.Installations(tokenResponse!.token, tokenResponse!.idUser.ToString());
 
-var allStats = new List<VrmInstallationStats>();
+var errorMessages = new List<string>();
 
 foreach (var loopDays in allPossibleBackupDays)
 {
@@ -137,20 +135,32 @@ foreach (var loopDays in allPossibleBackupDays)
 
     var yearDirectory = new DirectoryInfo(Path.Combine(backupDirectory.FullName, loopDays.Year.ToString()));
 
-    var startUtc = loopDays.ToDateTime(new TimeOnly(0,0));
-    var endUtc = loopDays.ToDateTime(new TimeOnly(23,59,59));
+    var startUtc = loopDays.ToDateTime(new TimeOnly(0, 0));
+    var endUtc = loopDays.ToDateTime(new TimeOnly(23, 59, 59));
 
     foreach (var install in installs!.records)
     {
         Console.WriteLine($"Getting Devices for Installation {install.name}");
 
-        var devices = await VictronVrmTools.DeviceList(tokenResponse!.token, install.idSite.ToString());
+        var installDevices = await VictronVrmTools.DeviceList(tokenResponse!.token, install.idSite.ToString());
 
         Console.WriteLine($"Getting Stats for Installation {install.name}");
 
-        var installationStats =
-            await VictronVrmTools.AllStatsFromDiagnostics(tokenResponse!.token, install.idSite.ToString(), startUtc,
+        List<VrmStat> installationStats;
+
+        try
+        {
+            installationStats = await VictronVrmTools.AllStatsFromDiagnostics(tokenResponse!.token,
+                install.idSite.ToString(), startUtc,
                 endUtc);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            errorMessages.Add(
+                $"Error Getting Stats for Installation {install.name}, {install.idSite} - UTC Date Range: {startUtc} to {endUtc} - {e.Message}");
+            continue;
+        }
 
         var statsByInstance = installationStats.GroupBy(x => x.Instance).ToList();
 
@@ -161,16 +171,18 @@ foreach (var loopDays in allPossibleBackupDays)
             Console.WriteLine(
                 $"Instance {loopInstance.Key} - {instanceStats.Count} Stats");
 
-            var device = devices.records.devices.FirstOrDefault(x => x.instance == loopInstance.Key);
+            var instanceDevices = installDevices.records.devices.Where(x => x.instance == loopInstance.Key)
+                .OrderBy(x => x.name).ToList();
 
             var installDirectory = new DirectoryInfo(Path.Combine(yearDirectory.FullName, install.name));
 
-            if(!installDirectory.Exists)
+            if (!installDirectory.Exists)
             {
                 installDirectory.Create();
             }
 
-            var file = new FileInfo(Path.Combine(installDirectory.FullName, $"VRM-{install.identifier}-{(device is null ? SlugTools.RandomLowerCaseString(4) : $"{device.name}-{device.identifier}")}-{loopDays.Year}-{loopDays.Month:D2}-{loopDays.Day:D2}.json"));
+            var file = new FileInfo(Path.Combine(installDirectory.FullName,
+                $"VRM-{install.identifier}-{loopInstance.Key}-{(instanceDevices.Any() ? $"{string.Join("_", instanceDevices.Select(x => x.name))}" : "")}--{loopDays.Year}-{loopDays.Month:D2}-{loopDays.Day:D2}.json"));
 
             if (file.Exists)
             {
@@ -182,7 +194,7 @@ foreach (var loopDays in allPossibleBackupDays)
             {
                 Installation = install,
                 Stats = instanceStats,
-                Device = device
+                Device = instanceDevices
             };
 
             Console.WriteLine($"Saving Stats for Installation {install.name} - {file.FullName}");
@@ -194,4 +206,17 @@ foreach (var loopDays in allPossibleBackupDays)
     await Task.Delay(30000);
 }
 
-Console.WriteLine("All Stats Retrieved");
+if (errorMessages.Any())
+{
+    Console.WriteLine("Finished with Errors:");
+
+    foreach (var loopError in errorMessages)
+    {
+        Console.WriteLine();
+        Console.WriteLine(loopError);
+    }
+
+    return -1;
+}
+
+return 0;

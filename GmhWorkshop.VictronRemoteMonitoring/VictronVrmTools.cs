@@ -110,11 +110,23 @@ public static class VictronVrmTools
 
         Console.WriteLine($"VRM Api: Querying Stats for {statCodes.Count} Stat Codes");
 
-        var solarYieldStatsResponse = await "https://vrmapi.victronenergy.com/v2/"
-            .AppendPathSegment($"installations/{installationId}/stats").SetQueryParams(queryParams)
-            .WithXAuthBearerToken(token).GetAsync();
+        string responseString;
+        IFlurlResponse solarYieldStatsResponse;
 
-        var responseString = await solarYieldStatsResponse.GetStringAsync();
+        try
+        {
+            solarYieldStatsResponse = await "https://vrmapi.victronenergy.com/v2/"
+                .AppendPathSegment($"installations/{installationId}/stats").SetQueryParams(queryParams)
+                .WithXAuthBearerToken(token).GetAsync();
+
+            responseString = await solarYieldStatsResponse.GetStringAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
 
         Console.WriteLine("Converting Stats return to Json");
 

@@ -26,7 +26,7 @@ public class StatsResponse
                     }
                 }
 
-                var possibleDiagnostic = diagnostics.FirstOrDefault(x => x.instance == record.Instance && x.code == loopStatCodes.Key);
+                var possibleDiagnostic = diagnostics.FirstOrDefault(x => x.instance == record.Instance && x.code == loopStatCodes.Key) ?? diagnostics.FirstOrDefault(x => x.code == loopStatCodes.Key);
 
                 var toAdd = new VrmStat
                 {

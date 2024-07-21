@@ -6,5 +6,5 @@ public class VrmInstallationStats
 {
     public required InstallationRecord Installation { get; set; }
     public required List<VrmStat> Stats { get; set; }
-    public Device? Device { get; set; }
+    public List<Device> Device { get; set; } = [];
 }
