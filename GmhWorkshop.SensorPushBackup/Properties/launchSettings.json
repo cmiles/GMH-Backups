@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "GmhWorkshop.SensorPushBackup": {
-      "commandName": "Project",
-      "commandLineArgs": "M:\\GmhDataWell\\WorkshopSettings\\SensorPushBackup.json"
-    }
-  }
-}

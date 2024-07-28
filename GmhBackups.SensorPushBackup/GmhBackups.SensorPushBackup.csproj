@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GmhBackups.BirdPiBackup\GmhBackups.BirdPiBackup.csproj" />
+    <ProjectReference Include="..\GmhBackups.SensorPush\GmhBackups.SensorPush.csproj" />
+    <ProjectReference Include="..\PointlessWaymarksTools\PointlessWaymarks.VaultfuscationTools\PointlessWaymarks.VaultfuscationTools.csproj" />
+  </ItemGroup>
+
+</Project>

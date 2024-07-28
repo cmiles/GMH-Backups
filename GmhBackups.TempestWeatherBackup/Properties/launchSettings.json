@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GmhBackups.TempestWeatherBackup": {
+      "commandName": "Project",
+      "commandLineArgs": "M:\\GmhDataWell\\TempestWeatherStation\\GmhTempestBackupSettings02.json"
+    }
+  }
+}

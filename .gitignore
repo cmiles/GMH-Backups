@@ -396,6 +396,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-GmhWorkshop.BirdPiBackup/Properties/launchSettings.json
-GmhWorkshop.BirdPiBackup/GmhWorkshop.BirdPiBackup.args.json
-GmhWorkshop.SensorPushBackup/GmhWorkshop.SensorPushBackup.args.json
+GmhBackups.BirdPiBackup/Properties/launchSettings.json
+GmhBackups.BirdPiBackup/GmhBackups.BirdPiBackup.args.json
+GmhBackups.SensorPushBackup/GmhBackups.SensorPushBackup.args.json
