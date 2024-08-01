@@ -5,8 +5,8 @@ namespace GmhBackups.VictronRemoteMonitoring.ApiDtos;
 public class StatsResponse
 {
     public bool Success { get; set; }
-    public List<StatsRecord> Records { get; set; }
-    public List<StatsTotals> Totals { get; set; }
+    public required List<StatsRecord> Records { get; set; }
+    public required List<StatsTotals> Totals { get; set; }
 
     public List<VrmStat> ToVrmStats(List<DiagnosticsRecord> diagnostics)
     {

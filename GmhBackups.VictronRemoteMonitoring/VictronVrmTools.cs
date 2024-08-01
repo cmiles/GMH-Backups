@@ -4,6 +4,7 @@ using Flurl.Http;
 using GmhBackups.VictronRemoteMonitoring.ApiDtos;
 using GmhBackups.VictronRemoteMonitoring.Models;
 using PointlessWaymarks.CommonTools;
+using Polly;
 using Serilog;
 
 namespace GmhBackups.VictronRemoteMonitoring;
@@ -90,6 +91,18 @@ public static class VictronVrmTools
         return returnList;
     }
 
+    /// <summary>
+    /// Query the VRM API for Stats - first tries to query all stats at once, if that fails it will query each stat one
+    /// at a time - the one at a time query incorporates a 2-second delay between each query which will significantly
+    /// extend the runtime.
+    /// </summary>
+    /// <param name="token"></param>
+    /// <param name="installationId"></param>
+    /// <param name="statCodes"></param>
+    /// <param name="startUtc"></param>
+    /// <param name="endUtc"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public static async Task<StatsResponse?> Stats(string token, string installationId, List<string> statCodes,
         DateTime startUtc, DateTime endUtc)
     {
@@ -123,6 +136,10 @@ public static class VictronVrmTools
         }
         catch (Exception e)
         {
+            if(e is FlurlHttpException { StatusCode: 400 })
+            {
+                return await StatsSingleQueries(token, installationId, statCodes, startUtc, endUtc);
+            }
             Console.WriteLine(e);
             throw;
         }
@@ -160,6 +177,98 @@ public static class VictronVrmTools
         }
 
         return response;
+    }
+
+    public static async Task<StatsResponse> StatsSingleQueries(string token, string installationId, List<string> statCodes,
+    DateTime startUtc, DateTime endUtc)
+    {
+        if (statCodes.Count == 0)
+        {
+            throw new ArgumentException("statCodes must contain at least one element", nameof(statCodes));
+        }
+
+        Console.WriteLine($"VRM Api: Querying {statCodes.Count} Stats One at a Time w/Delay");
+
+        var returnList = new List<StatsResponse>();
+
+        var counter = 0;
+
+        var orderedStatCodes = statCodes.OrderBy(x => x).ToList();
+
+        foreach (var loopStat in orderedStatCodes)
+        {
+            Console.WriteLine($"VRM Api: Querying Stats for Stat Code {loopStat} (waiting 2s to start) - {++counter} of {orderedStatCodes.Count}");
+
+            await Task.Delay(2000);
+
+            var queryParams = new List<KeyValuePair<string, string>>
+            {
+                new("show_instance", "1"),
+                new("type", "custom"),
+                new("start", ((DateTimeOffset)startUtc).ToUnixTimeSeconds().ToString()),
+                new("end", ((DateTimeOffset)endUtc).ToUnixTimeSeconds().ToString()),
+                new("attributeCodes[]", loopStat)
+            };
+
+            string responseString;
+            IFlurlResponse solarYieldStatsResponse;
+
+            try
+            {
+                solarYieldStatsResponse = await "https://vrmapi.victronenergy.com/v2/"
+                    .AppendPathSegment($"installations/{installationId}/stats").SetQueryParams(queryParams)
+                    .WithXAuthBearerToken(token).GetAsync();
+
+                responseString = await solarYieldStatsResponse.GetStringAsync();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Error Getting Stats for Stat Code {statCode}", loopStat);
+                continue;
+            }
+
+            Console.WriteLine("Converting Stats return to Json");
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            options.Converters.Add(new StatsRecordConverter());
+            options.Converters.Add(new StatsTotalsConverter());
+
+            var response = JsonSerializer.Deserialize<StatsResponse>(responseString, options);
+
+            if (response == null)
+            {
+                Log.ForContext("responseStatusCode", solarYieldStatsResponse.StatusCode)
+                    .ForContext("responseStatusMessage", solarYieldStatsResponse.ResponseMessage)
+                    .ForContext(nameof(loopStat), loopStat)
+                    .ForContext(nameof(responseString), responseString)
+                    .Error("VRM Stats didn't throw an Exception for {statCode} but conversion to Json Failed with a Null Return", loopStat);
+                continue;
+            }
+
+            if (!response.Success)
+            {
+                Log.ForContext("responseStatusCode", solarYieldStatsResponse.StatusCode)
+                    .ForContext("responseStatusMessage", solarYieldStatsResponse.ResponseMessage)
+                    .ForContext(nameof(loopStat), loopStat)
+                    .ForContext(nameof(responseString), responseString)
+                    .Error("VRM Stats didn't throw an Exception for {statCode} but conversion to Json Failed with a Null Return", loopStat);
+                continue;
+            }
+
+            returnList.Add(response);
+        }
+
+        var returnStats = new StatsResponse
+        {
+            Records = returnList.SelectMany(x => x.Records).ToList(),
+            Success = true,
+            Totals = returnList.SelectMany(x => x.Totals).ToList()
+        };
+
+        return returnStats;
     }
 
     public static async Task<AuthResponse> Login(string username, string password)
