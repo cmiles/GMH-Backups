@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "GmhBackups.VictronRemoteMonitoringBackup": {
-      "commandName": "Project",
-      "commandLineArgs": "M:\\GmhDataWell\\VictronSolar\\VrmBackupSettings02.json"
-    }
-  }
-}

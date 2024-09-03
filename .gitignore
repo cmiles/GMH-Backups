@@ -398,3 +398,10 @@ FodyWeavers.xsd
 *.sln.iml
 *launchSettings.json
 *.args.json
+/GmhBackups.SensorPushBackup/Properties/launchSettings.json
+/GmhBackups.TempestWeatherBackup/Properties/launchSettings.json
+/GmhBackups.TempestWeatherBackup/GmhBackups.TempestWeatherBackup.args.json
+/GmhBackups.TucsonElectricPowerBackup/Properties/launchSettings.json
+/GmhBackups.TucsonElectricPowerBackup/GmhBackups.TucsonElectricPowerBackup.args.json
+/GmhBackups.VictronRemoteMonitoringBackup/Properties/launchSettings.json
+/GmhBackups.VictronRemoteMonitoringBackup/GmhBackups.VictronRemoteMonitoringBackup.args.json
