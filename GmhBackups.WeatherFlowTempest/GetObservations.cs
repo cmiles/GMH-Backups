@@ -19,18 +19,18 @@ public static class Observations
 
         var frozenNow = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var stationResults = await GetStations(accessToken);
+        var (stationReturn, stationsJson) = await GetStations(accessToken);
 
-        if (stationResults.stationReturn is null || string.IsNullOrWhiteSpace(stationResults.stationsJson))
+        if (stationReturn is null || string.IsNullOrWhiteSpace(stationsJson))
         {
             Log.Error("WeatherFlow Tempest API did not Find any Stations?");
             return returnList;
         }
 
-        progress.Report($"Found {stationResults.stationsJson.Length} Stations");
+        progress.Report($"Found {stationsJson.Length} Stations");
 
         var deviceStationResults =
-            stationResults.stationReturn.stations.FirstOrDefault(x => x.devices.Any(y => y.device_id == deviceId));
+            stationReturn.stations.FirstOrDefault(x => x.devices.Any(y => y.device_id == deviceId));
 
         if (deviceStationResults is null)
         {
