@@ -11,7 +11,8 @@ var parsedSettings = await SetupTools.SetupAndGetSettingsFile(args);
 
 if (string.IsNullOrWhiteSpace(parsedSettings.SettingsFile))
 {
-    return;
+    await Log.CloseAndFlushAsync();
+    return -1;
 }
 
 var msLogger = new SerilogLoggerFactory(Log.Logger)
@@ -92,7 +93,8 @@ var settingsSetupResult = await settingFileReadAndSetup.Setup();
 
 if (!settingsSetupResult.isValid)
 {
-    return;
+    await Log.CloseAndFlushAsync();
+    return -1;
 }
 
 var settings = settingsSetupResult.settings;
@@ -146,3 +148,7 @@ await SftpHelpers.DownloadDirectoriesAndRegularFiles(sftpClient,
     Path.Combine(commonBackupDirectory.FullName, "Extracted", "Charts"), new ConsoleProgress());
 
 Log.Information("Finished {jobName}", "BirdPiBackup");
+
+await Log.CloseAndFlushAsync();
+
+return 0;

@@ -12,7 +12,8 @@ var parsedSettings = await SetupTools.SetupAndGetSettingsFile(args);
 
 if (string.IsNullOrWhiteSpace(parsedSettings.SettingsFile))
 {
-    return;
+    await Log.CloseAndFlushAsync();
+    return -1;
 }
 
 var msLogger = new SerilogLoggerFactory(Log.Logger)
@@ -82,7 +83,8 @@ var settingsSetupResult = await settingFileReadAndSetup.Setup();
 
 if (!settingsSetupResult.isValid)
 {
-    return;
+    await Log.CloseAndFlushAsync();
+    return -1;
 }
 
 var settings = settingsSetupResult.settings;
@@ -214,3 +216,7 @@ foreach (var loopDownloads in downloads)
 }
 
 Log.Information("Finished {jobName}", "TempestWeatherBackup");
+
+await Log.CloseAndFlushAsync();
+
+return 0;

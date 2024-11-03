@@ -13,6 +13,7 @@ var parsedSettings = await SetupTools.SetupAndGetSettingsFile(args);
 
 if (string.IsNullOrWhiteSpace(parsedSettings.SettingsFile))
 {
+    await Log.CloseAndFlushAsync();
     return -1;
 }
 
@@ -86,6 +87,7 @@ var settingsSetupResult = await settingFileReadAndSetup.Setup();
 
 if (!settingsSetupResult.isValid)
 {
+    await Log.CloseAndFlushAsync();
     return -1;
 }
 
@@ -125,7 +127,7 @@ var dayProgressCounter = 0;
 
 var tokenResponse = await VictronVrmTools.Login(settings.VrmEmail, settings.VrmPassword);
 
-var installs = await VictronVrmTools.Installations(tokenResponse!.token, tokenResponse!.idUser.ToString());
+var installs = await VictronVrmTools.Installations(tokenResponse.token, tokenResponse.idUser.ToString());
 
 var errorMessages = new List<string>();
 
@@ -138,11 +140,11 @@ foreach (var loopDays in allPossibleBackupDays)
     var startUtc = loopDays.ToDateTime(new TimeOnly(0, 0));
     var endUtc = loopDays.ToDateTime(new TimeOnly(23, 59, 59));
 
-    foreach (var install in installs!.records)
+    foreach (var install in installs.records)
     {
         Console.WriteLine($"Getting Devices for Installation {install.name}");
 
-        var installDevices = await VictronVrmTools.DeviceList(tokenResponse!.token, install.idSite.ToString());
+        var installDevices = await VictronVrmTools.DeviceList(tokenResponse.token, install.idSite.ToString());
 
         Console.WriteLine($"Getting Stats for Installation {install.name}");
 
@@ -150,7 +152,7 @@ foreach (var loopDays in allPossibleBackupDays)
 
         try
         {
-            installationStats = await VictronVrmTools.AllStatsFromDiagnostics(tokenResponse!.token,
+            installationStats = await VictronVrmTools.AllStatsFromDiagnostics(tokenResponse.token,
                 install.idSite.ToString(), startUtc,
                 endUtc);
         }
@@ -216,7 +218,12 @@ if (errorMessages.Any())
         Console.WriteLine(loopError);
     }
 
+    await Log.CloseAndFlushAsync();
     return -1;
 }
+
+Log.Information("Finished {jobName}", "TucsonElectricPowerBackup");
+
+await Log.CloseAndFlushAsync();
 
 return 0;
